@@ -7,14 +7,14 @@ plugins {
 }
 
 android {
-    compileSdkVersion(28)
-    buildToolsVersion("29.0.0")
+    compileSdkVersion(BuildVersions.targetSdkVersion)
+    buildToolsVersion(BuildVersions.buildToolsVersion)
     defaultConfig {
         applicationId = "com.example.androidmediapractice"
-        minSdkVersion(21)
-        targetSdkVersion(28)
-        versionCode = 1
-        versionName = "1.0"
+        minSdkVersion(BuildVersions.minSdkVersion)
+        targetSdkVersion(BuildVersions.targetSdkVersion)
+        versionCode = BuildVersions.versionCode
+        versionName = BuildVersions.versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
