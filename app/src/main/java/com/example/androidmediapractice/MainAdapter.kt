@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class MainAdapter(private val tasks: List<String>, private val onClick: () -> Unit = {}) : RecyclerView.Adapter<MainAdapter.ViewHolder>(){
+class MainAdapter(private val tasks: List<String>, private val onClick: (Int) -> Unit = {}) : RecyclerView.Adapter<MainAdapter.ViewHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_main, parent, false)
         return ViewHolder(view)
@@ -19,9 +19,9 @@ class MainAdapter(private val tasks: List<String>, private val onClick: () -> Un
     }
 
     class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
-        fun bind(task : String, onClick: () -> Unit) {
+        fun bind(task : String, onClick: (Int) -> Unit) {
             (itemView as TextView).text = task
-            itemView.setOnClickListener { onClick() }
+            itemView.setOnClickListener { onClick(layoutPosition) }
         }
     }
 }

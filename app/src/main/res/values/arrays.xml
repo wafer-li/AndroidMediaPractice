@@ -5,4 +5,8 @@
       在 Android 平台绘制一张图片，使用至少 3 种不同的 API，ImageView，SurfaceView，自定义 View
     </item>
   </string-array>
+
+  <string-array name="task_activities">
+    <item>Task1Activity</item>
+  </string-array>
 </resources>
