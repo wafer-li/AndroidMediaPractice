@@ -7,9 +7,16 @@
   tools:context=".MainActivity">
 
   <androidx.appcompat.widget.Toolbar
+    android:id="@+id/toolbar"
+    style="@style/AppTheme.Toolbar"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:title="@string/app_name" />
+
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recyclerView"
     android:layout_width="match_parent"
-    app:title="@string/app_name"
-    android:layout_height="wrap_content"
-    app:layout_constraintTop_toTopOf="parent" />
+    android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
