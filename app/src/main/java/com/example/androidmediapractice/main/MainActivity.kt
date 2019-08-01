@@ -1,9 +1,10 @@
-package com.example.androidmediapractice
+package com.example.androidmediapractice.main
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.example.androidmediapractice.R
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

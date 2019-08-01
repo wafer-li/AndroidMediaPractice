@@ -7,6 +7,6 @@
   </string-array>
 
   <string-array name="task_activities">
-    <item>Task1Activity</item>
+    <item>task1.Task1Activity</item>
   </string-array>
 </resources>

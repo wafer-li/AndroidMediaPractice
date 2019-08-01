@@ -1,10 +1,11 @@
-package com.example.androidmediapractice
+package com.example.androidmediapractice.main
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.androidmediapractice.R
 
 class MainAdapter(private val tasks: List<String>, private val onClick: (Int) -> Unit = {}) : RecyclerView.Adapter<MainAdapter.ViewHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
