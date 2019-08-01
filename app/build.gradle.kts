@@ -21,6 +21,16 @@ android {
         versionName = BuildVersions.versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    dataBinding {
+        isEnabled = true
+    }
+
+    lintOptions {
+        disable("GoogleAppIndexingWarning")
+        disable("AllowBackup")
+    }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
