@@ -18,6 +18,7 @@
       </intent-filter>
     </activity>
     <activity android:name=".main.task1.Task1Activity"/>
+    <activity android:name=".main.task2.Task2Activity"/>
   </application>
 
   <dist:module dist:instant="true" />
