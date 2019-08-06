@@ -36,7 +36,6 @@ class Task2Activity : AppCompatActivity() {
 
     private val isRecording: AtomicBoolean = AtomicBoolean(false)
     private val isPlaying: AtomicBoolean = AtomicBoolean(false)
-    private var count = 0
 
     companion object {
         private const val SAMPLE_RATE = 44100
