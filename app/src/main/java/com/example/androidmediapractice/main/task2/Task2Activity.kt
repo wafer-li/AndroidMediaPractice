@@ -73,7 +73,6 @@ class Task2Activity : AppCompatActivity() {
                     getString(R.string.audio_start_record)
                 }
         }
-
         playBtn.setOnClickListener {
             if (isPlaying.get()) {
                 stopPlay()
@@ -88,6 +87,10 @@ class Task2Activity : AppCompatActivity() {
                     getString(R.string.audio_start_play)
                 }
         }
+        saveWavBtn.setOnClickListener {
+            pcmToWav(File(getExternalFilesDir(null), obtainFileName()))
+        }
+        playWavBtn.setOnClickListener { }
     }
 
     private fun enableRecord() {
@@ -212,5 +215,38 @@ class Task2Activity : AppCompatActivity() {
         }
         audioTrack?.release()
         audioTrack = null
+    }
+
+    private fun pcmToWav(file: File): File? {
+        return if (file.exists() && file.isFile && file.extension == "pcm") {
+            val wavFile = File(getExternalFilesDir(null), "${file.nameWithoutExtension}.wav")
+            DataOutputStream(wavFile.outputStream().buffered()).use {
+                it.writeWavHeader(file)
+            }
+            wavFile
+        } else null
+    }
+
+    private fun DataOutputStream.writeWavHeader(pcmFile: File) {
+        val pcmSize = pcmFile.length()
+        /* The RIFF Chunk descriptor */
+        write("RIFF".toByteArray())      // RIFF ChunkId
+        writeInt((36 + pcmSize).toInt()) // ChunkSize
+        write("WAVE".toByteArray())      // Format
+
+        /* The fmt sub-chunk */
+        write("fmt ".toByteArray())
+        writeInt(16)
+        writeShort(1)
+        writeShort(1) // Number of channels, MONO = 1 , STEREO = 2
+        writeInt(SAMPLE_RATE)   // Sample Rate, in Hz
+        writeInt(SAMPLE_RATE * 1 * (16 / 8))              // Bitrate = Sample Rate * NumChannels * BitPerSample / 8
+        writeShort(1 * 16 / 8)
+        writeShort(16)
+
+        /* The data sub-chunk */
+        write("data".toByteArray())
+        writeInt(pcmFile.length().toInt())
+        write(pcmFile.readBytes())
     }
 }

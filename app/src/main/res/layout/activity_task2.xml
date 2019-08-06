@@ -23,4 +23,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="@string/audio_start_play"/>
+
+  <Button
+    android:id="@+id/saveWavBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/save_to_wav"/>
+
+  <Button
+    android:id="@+id/playWavBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/play_from_wav"/>
 </LinearLayout>

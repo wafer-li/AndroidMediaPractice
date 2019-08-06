@@ -14,4 +14,6 @@
   <string name="audio_stop_record">Stop Record Audio</string>
   <string name="audio_start_play">Start Play Audio</string>
   <string name="audio_stop_play">Stop Play Audio</string>
+  <string name="save_to_wav">Save to WAV File</string>
+  <string name="play_from_wav">Play from WAV File</string>
 </resources>
