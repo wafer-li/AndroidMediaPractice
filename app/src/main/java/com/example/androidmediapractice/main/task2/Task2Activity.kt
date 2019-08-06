@@ -1,10 +1,7 @@
 package com.example.androidmediapractice.main.task2
 
 import android.Manifest
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.AudioTrack
-import android.media.MediaRecorder
+import android.media.*
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.WorkerThread
@@ -22,7 +19,18 @@ import kotlin.concurrent.thread
 class Task2Activity : AppCompatActivity() {
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
-    private var recordBufSize = 0
+
+    private val recordBufSize = AudioRecord.getMinBufferSize(
+        SAMPLE_RATE,
+        CHANNEL_CONFIG,
+        ENCODING_FORMAT
+    )
+
+    private val playBufSize = AudioTrack.getMinBufferSize(
+        SAMPLE_RATE,
+        AudioFormat.CHANNEL_OUT_MONO,
+        ENCODING_FORMAT
+    )
 
     private val isRecording: AtomicBoolean = AtomicBoolean(false)
     private val isPlaying: AtomicBoolean = AtomicBoolean(false)
@@ -101,11 +109,7 @@ class Task2Activity : AppCompatActivity() {
     internal fun startRecord() {
         disablePlay()
         if (audioRecord == null) {
-            recordBufSize = AudioRecord.getMinBufferSize(
-                SAMPLE_RATE,
-                CHANNEL_CONFIG,
-                ENCODING_FORMAT
-            )
+
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG,
                 ENCODING_FORMAT, recordBufSize
@@ -124,7 +128,7 @@ class Task2Activity : AppCompatActivity() {
         audioRecord = null
     }
 
-    private fun obtainFileName() = "record$count.pcm"
+    private fun obtainFileName() = "record0.pcm"
 
     @WorkerThread
     private fun pullingRecordData() {
@@ -145,10 +149,45 @@ class Task2Activity : AppCompatActivity() {
     internal fun startPlay() {
         disableRecord()
         isPlaying.set(true)
+        if (audioTrack == null) {
+            audioTrack = AudioTrack(
+                AudioAttributes.Builder().build(),
+                AudioFormat.Builder().setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .setSampleRate(SAMPLE_RATE)
+                    .setEncoding(ENCODING_FORMAT)
+                    .build(),
+                playBufSize,
+                AudioTrack.MODE_STREAM,
+                0
+            )
+        }
+
+        audioTrack?.play()
+        thread(start = true) { pushingPlayData() }
+    }
+
+    @WorkerThread
+    private fun pushingPlayData() {
+        val bytes = ByteArray(playBufSize)
+        File(getExternalFilesDir(null), obtainFileName()).inputStream().use { input ->
+            while (isPlaying.get() && input.available() > 0) {
+                val readCount = input.read(bytes)
+                if (readCount > 0) {
+                    val playStatus = audioTrack?.write(bytes, 0, readCount) ?: -10
+                    if (playStatus < 0) {
+                        break
+                    }
+                }
+            }
+            isPlaying.set(false)
+        }
     }
 
     private fun stopPlay() {
         enableRecord()
         isPlaying.set(false)
+        audioTrack?.stop()
+        audioTrack?.release()
+        audioTrack = null
     }
 }
