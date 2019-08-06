@@ -51,14 +51,16 @@ class CustomSurfaceView(context: Context?, attrs: AttributeSet?, defStyleAttr: I
     }
 
     private fun draw(holder: SurfaceHolder) {
-        val bitmap = context.getDrawable(R.mipmap.ic_launcher).toBitmap()
-        heightMeasureSpec = MeasureSpec.makeMeasureSpec(bitmap.height, MeasureSpec.AT_MOST)
-        GlobalScope.launch(Dispatchers.Main) {
-            requestLayout()
+        val bitmap = context.getDrawable(R.mipmap.ic_launcher)?.toBitmap()
+        if (bitmap != null) {
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(bitmap.height, MeasureSpec.AT_MOST)
+            GlobalScope.launch(Dispatchers.Main) {
+                requestLayout()
+            }
+            val canvas = holder.lockCanvas(Rect(0, 0, this.width, this.height))
+            canvas.drawColor(Color.WHITE)
+            canvas.drawBitmap(bitmap, ((this.width - bitmap.width) / 2).toFloat(), 0F, Paint())
+            holder.unlockCanvasAndPost(canvas)
         }
-        val canvas = holder.lockCanvas(Rect(0, 0, this.width, this.height))
-        canvas.drawColor(Color.WHITE)
-        canvas.drawBitmap(bitmap, ((this.width - bitmap.width) / 2).toFloat(), 0F, Paint())
-        holder.unlockCanvasAndPost(canvas)
     }
 }

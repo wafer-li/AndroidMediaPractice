@@ -36,6 +36,24 @@ object Libs {
      */
     const val core_ktx: String = "androidx.core:core-ktx:" + Versions.core_ktx
 
+    const val databinding_adapters: String = "androidx.databinding:databinding-adapters:" +
+            Versions.androidx_databinding
+
+    /**
+     * https://developer.android.com/studio
+     */
+    const val databinding_common: String = "androidx.databinding:databinding-common:" +
+            Versions.androidx_databinding
+
+    /**
+     * https://developer.android.com/studio
+     */
+    const val databinding_compiler: String = "androidx.databinding:databinding-compiler:" +
+            Versions.androidx_databinding
+
+    const val databinding_runtime: String = "androidx.databinding:databinding-runtime:" +
+            Versions.androidx_databinding
+
     /**
      * https://developer.android.com/topic/libraries/architecture/index.html
      */
@@ -123,11 +141,6 @@ object Libs {
     /**
      * https://developer.android.com/studio
      */
-    const val aapt2: String = "com.android.tools.build:aapt2:" + Versions.aapt2
-
-    /**
-     * https://developer.android.com/studio
-     */
     const val com_android_tools_build_gradle: String = "com.android.tools.build:gradle:" +
             Versions.com_android_tools_build_gradle
 
@@ -208,4 +221,11 @@ object Libs {
     const val kotlinx_serialization_runtime: String =
         "org.jetbrains.kotlinx:kotlinx-serialization-runtime:" +
                 Versions.kotlinx_serialization_runtime
+
+    const val permissionsdispatcher_processor: String =
+        "org.permissionsdispatcher:permissionsdispatcher-processor:" +
+                Versions.org_permissionsdispatcher
+
+    const val permissionsdispatcher: String = "org.permissionsdispatcher:permissionsdispatcher:" +
+            Versions.org_permissionsdispatcher
 }

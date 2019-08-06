@@ -91,4 +91,10 @@ dependencies {
     // Work manager
     implementation(Libs.work_runtime_ktx)
     androidTestImplementation(Libs.work_testing)
+
+    /**
+     * Permission
+     */
+    implementation(Libs.permissionsdispatcher)
+    kapt(Libs.permissionsdispatcher_processor)
 }
