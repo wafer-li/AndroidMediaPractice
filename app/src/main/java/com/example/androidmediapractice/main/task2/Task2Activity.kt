@@ -10,6 +10,8 @@ import com.example.androidmediapractice.R
 import kotlinx.android.synthetic.main.activity_task2.*
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
+import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
@@ -133,13 +135,20 @@ class Task2Activity : AppCompatActivity() {
     @WorkerThread
     private fun pullingRecordData() {
         val audioData = ShortArray(recordBufSize)
-        val out = FileOutputStream(File(getExternalFilesDir(null), obtainFileName()))
+        val out = DataOutputStream(
+            FileOutputStream(
+                File(
+                    getExternalFilesDir(null),
+                    obtainFileName()
+                )
+            ).buffered()
+        )
         out.use { fileOut ->
             while (isRecording.get()) {
                 val status = audioRecord?.read(audioData, 0, recordBufSize) ?: -10
                 if (status >= 0) {
                     Log.i("Write PCM File", audioData.size.toString())
-                    fileOut.write(audioData.map { it.toByte() }.toByteArray())
+                    audioData.forEach { fileOut.writeShort(it.toInt()) }
                 }
             }
         }
@@ -168,15 +177,20 @@ class Task2Activity : AppCompatActivity() {
 
     @WorkerThread
     private fun pushingPlayData() {
-        val bytes = ByteArray(playBufSize)
-        File(getExternalFilesDir(null), obtainFileName()).inputStream().use { input ->
+        val shorts = ShortArray(playBufSize)
+        DataInputStream(
+            File(
+                getExternalFilesDir(null),
+                obtainFileName()
+            ).inputStream().buffered()
+        ).use { input ->
             while (isPlaying.get() && input.available() > 0) {
-                val readCount = input.read(bytes)
-                if (readCount > 0) {
-                    val playStatus = audioTrack?.write(bytes, 0, readCount) ?: -10
-                    if (playStatus < 0) {
-                        break
-                    }
+                repeat(shorts.size) {
+                    shorts[it] = input.readShort()
+                }
+                val playStatus = audioTrack?.write(shorts, 0, playBufSize) ?: -10
+                if (playStatus < 0) {
+                    break
                 }
             }
             isPlaying.set(false)
