@@ -2,8 +2,16 @@
   <string name="app_name">AndroidMediaPractice</string>
 
   <!-- Task 1  -->
+  <string name="task1_title">Task1</string>
   <string name="launcher_logo_content_description">Launcher Logo</string>
   <string name="image_view">ImageView</string>
   <string name="surface_view">SurfaceView</string>
   <string name="custom_view">CustomView</string>
+
+  <!-- Task 2 -->
+  <string name="task2_title">Task2</string>
+  <string name="audio_start_record">Start Record Audio</string>
+  <string name="audio_stop_record">Stop Record Audio</string>
+  <string name="audio_start_play">Start Play Audio</string>
+  <string name="audio_stop_play">Stop Play Audio</string>
 </resources>
