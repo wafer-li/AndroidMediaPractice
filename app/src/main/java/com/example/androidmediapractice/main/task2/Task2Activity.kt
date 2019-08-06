@@ -8,12 +8,12 @@ import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidmediapractice.R
 import kotlinx.android.synthetic.main.activity_task2.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
-import java.io.DataInputStream
-import java.io.DataOutputStream
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
@@ -84,9 +84,9 @@ class Task2Activity : AppCompatActivity() {
 
             playBtn.text =
                 if (isPlaying.get()) {
-                    getString(R.string.audio_start_play)
-                } else {
                     getString(R.string.audio_stop_play)
+                } else {
+                    getString(R.string.audio_start_play)
                 }
         }
     }
@@ -185,22 +185,32 @@ class Task2Activity : AppCompatActivity() {
             ).inputStream().buffered()
         ).use { input ->
             while (isPlaying.get() && input.available() > 0) {
-                repeat(shorts.size) {
-                    shorts[it] = input.readShort()
+                try {
+                    repeat(shorts.size) {
+                        shorts[it] = input.readShort()
+                    }
+                } catch (eof: EOFException) {
+                } catch (io: IOException) {
+                    break
                 }
                 val playStatus = audioTrack?.write(shorts, 0, playBufSize) ?: -10
                 if (playStatus < 0) {
                     break
                 }
             }
-            isPlaying.set(false)
+            stopPlay()
         }
     }
 
     private fun stopPlay() {
-        enableRecord()
         isPlaying.set(false)
-        audioTrack?.stop()
+        GlobalScope.launch(Dispatchers.Main) {
+            enableRecord()
+            playBtn.text = getString(R.string.audio_start_play)
+        }
+        if (audioTrack?.playState != AudioTrack.PLAYSTATE_STOPPED) {
+            audioTrack?.stop()
+        }
         audioTrack?.release()
         audioTrack = null
     }
