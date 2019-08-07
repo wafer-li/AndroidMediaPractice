@@ -4,6 +4,7 @@ import android.Manifest
 import android.media.*
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidmediapractice.R
@@ -93,7 +94,9 @@ class Task2Activity : AppCompatActivity() {
         saveWavBtn.setOnClickListener {
             pcmToWav(File(getExternalFilesDir(null), obtainFileName()))
         }
-        playWavBtn.setOnClickListener { }
+        playWavBtn.setOnClickListener {
+            playWavFile(File(getExternalFilesDir(null), obtainFileName().replace("pcm", "wav")))
+        }
     }
 
     private fun enableRecord() {
@@ -183,6 +186,7 @@ class Task2Activity : AppCompatActivity() {
     @WorkerThread
     private fun pushingPlayData() {
         val shorts = ShortArray(playBufSize)
+        val bytes = ByteArray(playBufSize * 2)
         DataInputStream(
             File(
                 getExternalFilesDir(null),
@@ -190,14 +194,8 @@ class Task2Activity : AppCompatActivity() {
             ).inputStream().buffered()
         ).use { input ->
             while (isPlaying.get() && input.available() > 0) {
-                try {
-                    repeat(shorts.size) {
-                        shorts[it] = input.readShort()
-                    }
-                } catch (eof: EOFException) {
-                } catch (io: IOException) {
-                    break
-                }
+                input.read(bytes)
+                ByteBuffer.wrap(bytes).asShortBuffer().get(shorts)
                 val playStatus = audioTrack?.write(shorts, 0, playBufSize) ?: -10
                 if (playStatus < 0) {
                     break
@@ -220,37 +218,43 @@ class Task2Activity : AppCompatActivity() {
         audioTrack = null
     }
 
-    private fun pcmToWav(file: File): File? {
-        return if (file.exists() && file.isFile && file.extension == "pcm") {
-            val wavFile = File(getExternalFilesDir(null), "${file.nameWithoutExtension}.wav")
-            DataOutputStream(wavFile.outputStream().buffered()).use {
-                it.writeWavHeader(file)
+    private fun pcmToWav(file: File) {
+        thread(start = true) {
+            if (file.exists() && file.isFile && file.extension == "pcm") {
+                val wavFile = File(getExternalFilesDir(null), "${file.nameWithoutExtension}.wav")
+                DataOutputStream(wavFile.outputStream().buffered()).use {
+                    it.writeWavHeader(file)
+                }
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@Task2Activity, "Save to WAV Successful", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
-            wavFile
-        } else null
+        }
     }
 
     private fun DataOutputStream.writeWavHeader(pcmFile: File) {
-        val pcmSize = pcmFile.length()
+        val rawData = pcmFile.readBytes()
         /* The RIFF Chunk descriptor */
         write("RIFF".toByteArray())      // RIFF ChunkId
-        writeInt((36 + pcmSize).toInt().reverseBytes()) // ChunkSize
+        writeInt((36 + rawData.size).reverseBytes()) // ChunkSize
         write("WAVE".toByteArray())      // Format
 
         /* The fmt sub-chunk */
-        write("fmt ".toByteArray())
-        writeInt(16.reverseBytes())
-        writeShortInverted(1)
+        write("fmt ".toByteArray()) // Subchunk1ID
+        writeInt(16.reverseBytes()) // Subchunk1Size
+        writeShortInverted(1) // AudioFormat, PCM = 1, other indicate some form of compression
         writeShortInverted(1) // Number of channels, MONO = 1 , STEREO = 2
         writeInt(SAMPLE_RATE.reverseBytes())   // Sample Rate, in Hz
-        writeInt((SAMPLE_RATE * 1 * (16 / 8)).reverseBytes())              // Bitrate = Sample Rate * NumChannels * BitPerSample / 8
-        writeShortInverted((1 * 16 / 8))
-        writeShortInverted(16)
+        writeInt((SAMPLE_RATE * 1 * (16 / 8)).reverseBytes()) // Bitrate = Sample Rate * NumChannels * BitPerSample / 8
+        writeShortInverted((1 * 16 / 8)) // BlockAlign = NumChannels * BitsPerSample/8
+        writeShortInverted(16)     // BitsPerSample
 
         /* The data sub-chunk */
-        write("data".toByteArray())
+        write("data".toByteArray()) // Subchunk2ID
+        // Subchunk2Size = NumSamples * NumChannels * BitsPerSample/8 = The size of PCM data
         writeInt(pcmFile.length().toInt().reverseBytes())
-        val rawData = pcmFile.readBytes()
+        // PCM data, using little-endian
         val shorts = ShortArray(rawData.size / 2)
         ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts)
         shorts.forEach { this.writeShort(it.toInt()) }
@@ -269,5 +273,55 @@ class Task2Activity : AppCompatActivity() {
         val v1 = (value ushr 8) and 0xFF
         write(v0)
         write(v1)
+    }
+
+    private fun playWavFile(file: File) {
+        if (file.exists() && file.isFile && file.extension == "wav" && file.length() > 44) {
+            playWavBtn.isEnabled = false
+            saveWavBtn.isEnabled = false
+            disablePlay()
+            disableRecord()
+            isPlaying.set(true)
+            if (audioTrack == null) {
+                audioTrack = AudioTrack(
+                    AudioAttributes.Builder().build(),
+                    AudioFormat.Builder().setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .setSampleRate(SAMPLE_RATE)
+                        .setEncoding(ENCODING_FORMAT)
+                        .build(),
+                    playBufSize,
+                    AudioTrack.MODE_STREAM,
+                    0
+                )
+            }
+            audioTrack?.play()
+            thread(start = true) {
+                val raf = RandomAccessFile(file, "r")
+                raf.seek(44L)
+                val shorts = ShortArray(playBufSize)
+                val bytes = ByteArray(playBufSize * 2)
+                raf.use {
+                    while (isPlaying.get()) {
+                        val readCount = it.read(bytes)
+                        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                            .get(shorts)
+                        if (readCount < 0) {
+                            break
+                        }
+                        val playStatus = audioTrack?.write(shorts, 0, playBufSize) ?: -10
+                        if (playStatus < 0) {
+                            break
+                        }
+                    }
+                }
+                isPlaying.set(false)
+                GlobalScope.launch(Dispatchers.Main) {
+                    playWavBtn.isEnabled = true
+                    saveWavBtn.isEnabled = true
+                    enablePlay()
+                    enableRecord()
+                }
+            }
+        }
     }
 }
