@@ -7,10 +7,14 @@
     <item>
       在 Android 平台使用 AudioRecord 和 AudioTrack API 完成音频 PCM 数据的采集和播放，并实现读写音频 wav 文件
     </item>
+    <item>
+      在 Android 平台使用 Camera API 进行视频的采集，分别使用 SurfaceView、TextureView 来预览 Camera 数据，取到 NV21 的数据回调
+    </item>
   </string-array>
 
   <string-array name="task_activities">
     <item>task1.Task1Activity</item>
     <item>task2.Task2Activity</item>
+    <item>task3.Task3Activity</item>
   </string-array>
 </resources>

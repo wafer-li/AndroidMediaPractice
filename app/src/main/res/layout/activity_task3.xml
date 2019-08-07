@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+  <androidx.appcompat.widget.Toolbar
+    android:id="@+id/toolbar"
+    style="@style/AppTheme.Toolbar"
+    app:title="@string/task3_title"/>
+
+  <Button
+    android:id="@+id/recordVideoBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/record_video"/>
+
+  <Button
+    android:id="@+id/previewSurfaceViewBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/preview_video_surface_view"/>
+
+  <Button
+    android:id="@+id/previewTextureViewBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/preview_video_texture_view"/>
+
+  <Button
+    android:id="@+id/nv21CallbackBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/nv21_callback"/>
+</LinearLayout>

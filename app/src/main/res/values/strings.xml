@@ -16,4 +16,11 @@
   <string name="audio_stop_play">Stop Play Audio</string>
   <string name="save_to_wav">Save to WAV File</string>
   <string name="play_from_wav">Play from WAV File</string>
+
+  <!-- Task 3 -->
+  <string name="task3_title">Task3</string>
+  <string name="record_video">Record Video</string>
+  <string name="preview_video_surface_view">Preview Video Surface View</string>
+  <string name="preview_video_texture_view">Preview Video Texture View</string>
+  <string name="nv21_callback">NV21 Data Callback</string>
 </resources>
