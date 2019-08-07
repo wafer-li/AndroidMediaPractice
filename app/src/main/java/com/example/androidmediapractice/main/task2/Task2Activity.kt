@@ -14,8 +14,11 @@ import kotlinx.coroutines.launch
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+
 
 @RuntimePermissions
 class Task2Activity : AppCompatActivity() {
@@ -231,22 +234,40 @@ class Task2Activity : AppCompatActivity() {
         val pcmSize = pcmFile.length()
         /* The RIFF Chunk descriptor */
         write("RIFF".toByteArray())      // RIFF ChunkId
-        writeInt((36 + pcmSize).toInt()) // ChunkSize
+        writeInt((36 + pcmSize).toInt().reverseBytes()) // ChunkSize
         write("WAVE".toByteArray())      // Format
 
         /* The fmt sub-chunk */
         write("fmt ".toByteArray())
-        writeInt(16)
-        writeShort(1)
-        writeShort(1) // Number of channels, MONO = 1 , STEREO = 2
-        writeInt(SAMPLE_RATE)   // Sample Rate, in Hz
-        writeInt(SAMPLE_RATE * 1 * (16 / 8))              // Bitrate = Sample Rate * NumChannels * BitPerSample / 8
-        writeShort(1 * 16 / 8)
-        writeShort(16)
+        writeInt(16.reverseBytes())
+        writeShortInverted(1)
+        writeShortInverted(1) // Number of channels, MONO = 1 , STEREO = 2
+        writeInt(SAMPLE_RATE.reverseBytes())   // Sample Rate, in Hz
+        writeInt((SAMPLE_RATE * 1 * (16 / 8)).reverseBytes())              // Bitrate = Sample Rate * NumChannels * BitPerSample / 8
+        writeShortInverted((1 * 16 / 8))
+        writeShortInverted(16)
 
         /* The data sub-chunk */
         write("data".toByteArray())
-        writeInt(pcmFile.length().toInt())
-        write(pcmFile.readBytes())
+        writeInt(pcmFile.length().toInt().reverseBytes())
+        val rawData = pcmFile.readBytes()
+        val shorts = ShortArray(rawData.size / 2)
+        ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts)
+        shorts.forEach { this.writeShort(it.toInt()) }
+    }
+
+    private fun Int.reverseBytes(): Int {
+        val v0 = (this ushr 0) and 0xFF
+        val v1 = (this ushr 8) and 0xFF
+        val v2 = (this ushr 16) and 0xFF
+        val v3 = (this ushr 24) and 0xFF
+        return (v0 shl 24) or (v1 shl 16) or (v2 shl 8) or (v3 shl 0)
+    }
+
+    private fun DataOutputStream.writeShortInverted(value: Int) {
+        val v0 = value and 0xFF
+        val v1 = (value ushr 8) and 0xFF
+        write(v0)
+        write(v1)
     }
 }
