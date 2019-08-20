@@ -35,4 +35,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="@string/play_from_wav"/>
+
+  <Button
+    android:id="@+id/encodeMp3Btn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/play_from_wav" />
 </LinearLayout>

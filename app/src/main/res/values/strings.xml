@@ -16,6 +16,7 @@
   <string name="audio_stop_play">Stop Play Audio</string>
   <string name="save_to_wav">Save to WAV File</string>
   <string name="play_from_wav">Play from WAV File</string>
+  <string name="encode_to_mp3">Encode to MP3</string>
 
   <!-- Task 3 -->
   <string name="task3_title">Task3</string>

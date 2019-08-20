@@ -20,6 +20,23 @@ android {
         versionCode = BuildVersions.versionCode
         versionName = BuildVersions.versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags.apply { add("-std=c++14") }
+            }
+        }
+    }
+
+    sourceSets {
+        this["main"].jni.srcDirs("src/main/cpp", "src/main/jni")
+    }
+
+    externalNativeBuild {
+        cmake {
+            setPath("CMakeLists.txt")
+            setVersion("3.10.2")
+        }
     }
 
     dataBinding {
