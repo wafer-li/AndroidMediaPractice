@@ -98,6 +98,18 @@ class Task2Activity : AppCompatActivity() {
             playWavFile(File(getExternalFilesDir(null), obtainFileName().replace("pcm", "wav")))
         }
         encodeMp3Btn.setOnClickListener {
+            val pcmFullPath = File(getExternalFilesDir(null), obtainFileName()).absolutePath
+            val mp3FullPath = File(getExternalFilesDir(null), obtainMp3FilePath()).absolutePath
+            GlobalScope.launch(Dispatchers.IO) {
+                LameWrapper().run {
+                    init(pcmFullPath, 1, SAMPLE_RATE * 2, SAMPLE_RATE, mp3FullPath)
+                    encode()
+                    destroy()
+                    GlobalScope.launch(Dispatchers.Main) {
+                        Toast.makeText(this@Task2Activity, "mp3 成功", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
@@ -141,6 +153,7 @@ class Task2Activity : AppCompatActivity() {
     }
 
     private fun obtainFileName() = "record0.pcm"
+    private fun obtainMp3FilePath() = "record0.mp3"
 
     @WorkerThread
     private fun pullingRecordData() {

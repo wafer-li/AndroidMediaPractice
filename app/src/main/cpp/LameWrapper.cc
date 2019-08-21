@@ -5,7 +5,7 @@
 #include "LameWrapper.h"
 #include "Mp3Encoder.h"
 
-Mp3Encoder *mp3Encoder;
+Mp3Encoder *mp3Encoder = nullptr;
 
 extern "C" void Java_com_example_androidmediapractice_main_task2_LameWrapper_init(JNIEnv *jniEnv,
                                                                                   jobject jClass,
@@ -15,8 +15,8 @@ extern "C" void Java_com_example_androidmediapractice_main_task2_LameWrapper_ini
                                                                                   jint sampleRate,
                                                                                   jstring mp3Path) {
   mp3Encoder = new Mp3Encoder();
-  const char *pcmFilePath = jniEnv->GetStringUTFChars(pcmPath, nullptr);
-  const char *mp3FilePath = jniEnv->GetStringUTFChars(mp3Path, nullptr);
+  const char *pcmFilePath = jniEnv->GetStringUTFChars(pcmPath, JNI_FALSE);
+  const char *mp3FilePath = jniEnv->GetStringUTFChars(mp3Path, JNI_FALSE);
   mp3Encoder->init(pcmFilePath, mp3FilePath, audioChannels, bitRates, sampleRate);
   jniEnv->ReleaseStringUTFChars(pcmPath, pcmFilePath);
   jniEnv->ReleaseStringUTFChars(mp3Path, mp3FilePath);

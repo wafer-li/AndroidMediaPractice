@@ -20,7 +20,8 @@ int Mp3Encoder::init(const char *pcmPath,
       lame_set_in_samplerate(lame, sampleRates);
       lame_set_out_samplerate(lame, sampleRates);
       lame_set_num_channels(lame, audioChannels);
-      lame_set_brate(lame, bitRates);
+      lame_set_mode(lame, MONO);
+      lame_set_brate(lame, bitRates / 1000);
       lame_init_params(lame);
       result = 0;
     }
@@ -29,38 +30,27 @@ int Mp3Encoder::init(const char *pcmPath,
 }
 void Mp3Encoder::encode() {
   auto *buffer = new short[bufferSize / 2];
-  auto *leftBuffer = new short[bufferSize / 4];
-  auto *rightBuffer = new short[bufferSize / 4];
-  auto mp3Buffer = new unsigned char[bufferSize];
+  auto *mp3Buffer = new unsigned char[bufferSize];
 
-  while (int readBufferSize = fread(buffer, 2, static_cast<size_t>(bufferSize / 2), pcmFile)) {
-    for (int i = 0; i < readBufferSize; i++) {
-      if (i % 2 == 0) {
-        leftBuffer[i / 2] = buffer[i];
-      } else {
-        rightBuffer[i / 2] = buffer[i];
-      }
-    }
+  while (int
+      readBufferSize = fread(buffer, sizeof(short), static_cast<size_t>(bufferSize / 2), pcmFile)) {
     int code = lame_encode_buffer(lame,
-                                  leftBuffer,
-                                  rightBuffer,
-                                  readBufferSize / 2,
+                                  buffer,
+                                  nullptr,
+                                  readBufferSize,
                                   mp3Buffer,
                                   bufferSize);
-    if (code == 0) {
-      fwrite(mp3Buffer, 1, static_cast<size_t>(bufferSize), mp3File);
-    }
+    fwrite(mp3Buffer, sizeof(unsigned char), static_cast<size_t>(code), mp3File);
   }
   delete[] buffer;
-  delete[] leftBuffer;
-  delete[] rightBuffer;
   delete[] mp3Buffer;
 }
 void Mp3Encoder::destroy() {
-  if (mp3File != nullptr) {
-    fclose(mp3File);
-  }
   if (pcmFile != nullptr) {
     fclose(pcmFile);
+  }
+  if (mp3File != nullptr) {
+    fclose(mp3File);
+    lame_close(lame);
   }
 }
