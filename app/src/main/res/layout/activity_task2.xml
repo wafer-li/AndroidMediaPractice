@@ -40,5 +40,5 @@
     android:id="@+id/encodeMp3Btn"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="@string/play_from_wav" />
+    android:text="@string/encode_to_mp3" />
 </LinearLayout>

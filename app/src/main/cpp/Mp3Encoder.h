@@ -10,9 +10,10 @@
 #include <lame.h>
 class Mp3Encoder {
  private:
-  FILE *pcmFile;
-  FILE *mp3File;
-  lame_t lame;
+  FILE *pcmFile{};
+  FILE *mp3File{};
+  lame_t lame{};
+  int bufferSize = 1024 * 256;
 
  public:
   int init(const char *pcmPath,

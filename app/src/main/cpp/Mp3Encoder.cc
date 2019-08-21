@@ -28,8 +28,39 @@ int Mp3Encoder::init(const char *pcmPath,
   return result;
 }
 void Mp3Encoder::encode() {
+  auto *buffer = new short[bufferSize / 2];
+  auto *leftBuffer = new short[bufferSize / 4];
+  auto *rightBuffer = new short[bufferSize / 4];
+  auto mp3Buffer = new unsigned char[bufferSize];
 
+  while (int readBufferSize = fread(buffer, 2, static_cast<size_t>(bufferSize / 2), pcmFile)) {
+    for (int i = 0; i < readBufferSize; i++) {
+      if (i % 2 == 0) {
+        leftBuffer[i / 2] = buffer[i];
+      } else {
+        rightBuffer[i / 2] = buffer[i];
+      }
+    }
+    int code = lame_encode_buffer(lame,
+                                  leftBuffer,
+                                  rightBuffer,
+                                  readBufferSize / 2,
+                                  mp3Buffer,
+                                  bufferSize);
+    if (code == 0) {
+      fwrite(mp3Buffer, 1, static_cast<size_t>(bufferSize), mp3File);
+    }
+  }
+  delete[] buffer;
+  delete[] leftBuffer;
+  delete[] rightBuffer;
+  delete[] mp3Buffer;
 }
 void Mp3Encoder::destroy() {
-
+  if (mp3File != nullptr) {
+    fclose(mp3File);
+  }
+  if (pcmFile != nullptr) {
+    fclose(pcmFile);
+  }
 }

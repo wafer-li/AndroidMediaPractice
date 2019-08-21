@@ -98,7 +98,6 @@ class Task2Activity : AppCompatActivity() {
             playWavFile(File(getExternalFilesDir(null), obtainFileName().replace("pcm", "wav")))
         }
         encodeMp3Btn.setOnClickListener {
-            Toast.makeText(this, LameWrapper().init(), Toast.LENGTH_SHORT).show()
         }
     }
 

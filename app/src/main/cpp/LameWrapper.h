@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     com_example_androidmediapractice_main_task2_LameWrapper
+ * Method:    init
+ * Signature: (Ljava/lang/String;IIILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_example_androidmediapractice_main_task2_LameWrapper_init
+    (JNIEnv *, jobject, jstring, jint, jint, jint, jstring);
+
+/*
+ * Class:     com_example_androidmediapractice_main_task2_LameWrapper
  * Method:    encode
  * Signature: ()V
  */
@@ -17,26 +25,10 @@ JNIEXPORT void JNICALL Java_com_example_androidmediapractice_main_task2_LameWrap
 
 /*
  * Class:     com_example_androidmediapractice_main_task2_LameWrapper
- * Method:    init
+ * Method:    destroy
  * Signature: ()V
  */
-JNIEXPORT jstring JNICALL Java_com_example_androidmediapractice_main_task2_LameWrapper_init
-    (JNIEnv *, jobject);
-
-/*
- * Class:     com_example_androidmediapractice_main_task2_LameWrapper
- * Method:    close
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_com_example_androidmediapractice_main_task2_LameWrapper_close
-    (JNIEnv *, jobject);
-
-/*
- * Class:     com_example_androidmediapractice_main_task2_LameWrapper
- * Method:    flush
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_com_example_androidmediapractice_main_task2_LameWrapper_flush
+JNIEXPORT void JNICALL Java_com_example_androidmediapractice_main_task2_LameWrapper_destroy
     (JNIEnv *, jobject);
 
 #ifdef __cplusplus
