@@ -100,15 +100,8 @@ class Task2Activity : AppCompatActivity() {
         encodeMp3Btn.setOnClickListener {
             val pcmFullPath = File(getExternalFilesDir(null), obtainFileName()).absolutePath
             val mp3FullPath = File(getExternalFilesDir(null), obtainMp3FilePath()).absolutePath
-            GlobalScope.launch(Dispatchers.IO) {
-                LameWrapper().run {
-                    init(pcmFullPath, 1, SAMPLE_RATE * 2, SAMPLE_RATE, mp3FullPath)
-                    encode()
-                    destroy()
-                    GlobalScope.launch(Dispatchers.Main) {
-                        Toast.makeText(this@Task2Activity, "mp3 成功", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            LameWrapper(pcmFullPath, mp3FullPath).toMp3File {
+                Toast.makeText(this, "MP3 成功", Toast.LENGTH_SHORT).show()
             }
         }
     }

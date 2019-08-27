@@ -22,7 +22,6 @@ add_library( # Sets the name of the library.
 
         ${LAME_SRC_LIST}
         src/main/cpp/LameWrapper.cc
-        src/main/cpp/Mp3Encoder.cc
         )
 
 # Searches for a specified prebuilt library and stores the path as a
