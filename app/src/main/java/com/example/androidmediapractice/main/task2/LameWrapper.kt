@@ -17,7 +17,7 @@ class LameWrapper(pcmFilePath: String, mp3FilePath: String) {
     private val sampleRate = 44100
     private val channels = 1
     private val quality = 7
-    private val bitRate = sampleRate * 2
+    private val bitRate = 32
 
     private val bufferSize =
         AudioRecord.getMinBufferSize(
@@ -34,25 +34,13 @@ class LameWrapper(pcmFilePath: String, mp3FilePath: String) {
         GlobalScope.launch(Dispatchers.IO) {
             init(sampleRate, sampleRate, channels, bitRate, quality)
 
-            val inBuffer = ByteArray(bufferSize * 2)
-            val mp3Buffer = ByteArray(bufferSize * 2)
             val out = FileOutputStream(mp3File)
-            pcmFile.inputStream().buffered().use {
-                while (it.available() > 0) {
-                    val readCount = it.read(inBuffer)
-                    if (readCount < 0) {
-                        break
-                    }
-                    val shorts = ShortArray(bufferSize)
-                    ByteBuffer.wrap(inBuffer).asShortBuffer().get(shorts)
-                    encode(shorts, null, bufferSize, mp3Buffer)
-                    out.write(mp3Buffer)
-                }
-            }
-            val flushResult = flush(mp3Buffer)
-            if (flushResult > 0) {
-                out.write(mp3Buffer)
-            }
+            val inBuffer = pcmFile.inputStream().buffered().readBytes()
+            val shorts = ShortArray(inBuffer.size / 2)
+            val mp3Buffer = ByteArray(inBuffer.size)
+            ByteBuffer.wrap(inBuffer).asShortBuffer().get(shorts)
+            encode(shorts, null, shorts.size, mp3Buffer)
+            out.write(mp3Buffer)
             out.close()
             close()
             GlobalScope.launch(Dispatchers.Main) {
