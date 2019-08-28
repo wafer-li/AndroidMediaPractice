@@ -35,12 +35,14 @@ class LameWrapper(pcmFilePath: String, mp3FilePath: String) {
             init(sampleRate, sampleRate, channels, bitRate, quality)
 
             val out = FileOutputStream(mp3File)
-            val inBuffer = pcmFile.inputStream().buffered().readBytes()
+            val inputStream = pcmFile.inputStream().buffered()
+            val inBuffer = inputStream.readBytes()
             val shorts = ShortArray(inBuffer.size / 2)
             val mp3Buffer = ByteArray(inBuffer.size)
             ByteBuffer.wrap(inBuffer).asShortBuffer().get(shorts)
             encode(shorts, null, shorts.size, mp3Buffer)
             out.write(mp3Buffer.dropLastWhile { it == 0.toByte() }.toByteArray())
+            inputStream.close()
             out.close()
             close()
             GlobalScope.launch(Dispatchers.Main) {
