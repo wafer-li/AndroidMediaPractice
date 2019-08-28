@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidmediapractice.R
 import kotlinx.android.synthetic.main.activity_task3.*
+import permissions.dispatcher.NeedsPermission
+import permissions.dispatcher.RuntimePermissions
 
+@RuntimePermissions
 class Task3Activity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -13,9 +16,16 @@ class Task3Activity : AppCompatActivity() {
     }
 
     private fun initView() {
-        recordVideoBtn.setOnClickListener { }
+        recordVideoBtn.setOnClickListener {
+
+        }
         previewSurfaceViewBtn.setOnClickListener { }
         previewTextureViewBtn.setOnClickListener { }
         nv21CallbackBtn.setOnClickListener { }
+    }
+
+    @NeedsPermission(android.Manifest.permission.CAMERA)
+    private fun openRecord() {
+
     }
 }
