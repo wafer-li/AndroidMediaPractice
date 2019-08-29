@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.OutputStream
+import java.io.FileOutputStream
 
 class CameraHelper(
     private val context: Context,
@@ -50,7 +50,7 @@ class CameraHelper(
     var isRecording = false
         private set
 
-    private var outputStream: OutputStream? = null
+    private var outputStream: FileOutputStream? = null
 
     private var previewSize = Size(PREVIEW_WIDTH, PREVIEW_HEIGHT)
 
@@ -239,15 +239,14 @@ class CameraHelper(
             outputStream = file.outputStream()
             imageReader.setOnImageAvailableListener({ reader ->
                 val image = reader.acquireLatestImage()
-                // FIXME 直接写入 Buffer
-                val byteArrays = image.planes.map {
-                    val byteArray = ByteArray(it.buffer.remaining())
-                    it.buffer.get(byteArray)
-                    byteArray
+                val byteBuffers = image.planes.map {
+                    it.buffer.duplicate()
                 }
                 image.close()
                 GlobalScope.launch(Dispatchers.IO) {
-                    byteArrays.forEach { outputStream?.write(it) }
+                    byteBuffers.forEach {
+                        outputStream?.channel?.write(it)
+                    }
                 }
             }, cameraHandler)
             cameraDevice?.apply {
