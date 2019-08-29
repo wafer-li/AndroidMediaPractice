@@ -239,6 +239,7 @@ class CameraHelper(
             outputStream = file.outputStream()
             imageReader.setOnImageAvailableListener({ reader ->
                 val image = reader.acquireLatestImage()
+                // FIXME 直接写入 Buffer
                 val byteArrays = image.planes.map {
                     val byteArray = ByteArray(it.buffer.remaining())
                     it.buffer.get(byteArray)
@@ -250,7 +251,13 @@ class CameraHelper(
                 }
             }, cameraHandler)
             cameraDevice?.apply {
+                val surface = when {
+                    textureView != null -> Surface(textureView.surfaceTexture)
+                    surfaceView != null -> surfaceView.holder.surface
+                    else -> null
+                }
                 val request = this.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                request.addTarget(surface!!)
                 request.addTarget(imageReader.surface)
                 request.set(
                     CaptureRequest.CONTROL_AE_MODE,
