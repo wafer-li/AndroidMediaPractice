@@ -4,8 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
@@ -15,6 +17,11 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.OutputStream
 
 class CameraHelper(
     private val context: Context,
@@ -25,6 +32,8 @@ class CameraHelper(
     private var cameraDevice: CameraDevice? = null
     private lateinit var cameraCharacteristics: CameraCharacteristics
     private var cameraId: String = ""
+
+    private lateinit var imageReader: ImageReader
 
     private var cameraOrientation = 0
     private val displayRotation =
@@ -38,13 +47,18 @@ class CameraHelper(
     private var canTakePic = true
     private var canExchangeCamera = false
 
+    var isRecording = false
+        private set
+
+    private var outputStream: OutputStream? = null
+
     private var previewSize = Size(PREVIEW_WIDTH, PREVIEW_HEIGHT)
 
 
     companion object {
         private const val CAMERA_FACING = CameraCharacteristics.LENS_FACING_BACK
-        private const val PREVIEW_WIDTH = 1920
-        private const val PREVIEW_HEIGHT = 1080
+        private const val PREVIEW_WIDTH = 1080
+        private const val PREVIEW_HEIGHT = 1920
     }
 
     init {
@@ -108,6 +122,13 @@ class CameraHelper(
         // Setup preview
         textureView?.surfaceTexture?.setDefaultBufferSize(previewSize.width, previewSize.height)
 
+        imageReader = ImageReader.newInstance(
+            previewSize.width,
+            previewSize.height,
+            ImageFormat.YUV_420_888,
+            1
+        )
+
         openCamera()
     }
 
@@ -139,7 +160,11 @@ class CameraHelper(
     }
 
 
-    private fun createCaptureSession(cameraDevice: CameraDevice) {
+    private fun createCaptureSession(cameraDevice: CameraDevice?) {
+
+        if (cameraDevice == null) {
+            return
+        }
 
         val surface = when {
             textureView != null -> Surface(textureView.surfaceTexture)
@@ -164,7 +189,7 @@ class CameraHelper(
         )
 
         cameraDevice.createCaptureSession(
-            arrayListOf(surface),
+            arrayListOf(surface, imageReader.surface),
             object : CameraCaptureSession.StateCallback() {
                 override fun onConfigureFailed(p0: CameraCaptureSession) {
                     Toast.makeText(context, "开启预览会话失败", Toast.LENGTH_SHORT).show()
@@ -208,8 +233,55 @@ class CameraHelper(
 
     }
 
-    fun record() {
+    fun startRecord(file: File) {
+        if (!isRecording) {
+            isRecording = true
+            outputStream = file.outputStream()
+            imageReader.setOnImageAvailableListener({ reader ->
+                val image = reader.acquireLatestImage()
+                val byteArrays = image.planes.map {
+                    val byteArray = ByteArray(it.buffer.remaining())
+                    it.buffer.get(byteArray)
+                    byteArray
+                }
+                image.close()
+                GlobalScope.launch(Dispatchers.IO) {
+                    byteArrays.forEach { outputStream?.write(it) }
+                }
+            }, cameraHandler)
+            cameraDevice?.apply {
+                val request = this.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                request.addTarget(imageReader.surface)
+                request.set(
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CaptureRequest.CONTROL_AE_ANTIBANDING_MODE_AUTO
+                )
+                request.set(
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                )
+                request.build().let {
+                    cameraCaptureSession?.setRepeatingRequest(
+                        it,
+                        object : CameraCaptureSession.CaptureCallback() {},
+                        cameraHandler
+                    )
+                }
+            }
+        }
+    }
 
+    fun stopRecord() {
+        if (isRecording) {
+            cameraCaptureSession?.close()
+            createCaptureSession(cameraDevice)
+
+            outputStream?.close()
+            outputStream = null
+            imageReader.close()
+
+            isRecording = false
+        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
@@ -219,6 +291,9 @@ class CameraHelper(
 
         cameraDevice?.close()
         cameraDevice = null
+
+        outputStream?.close()
+        outputStream = null
 
         canExchangeCamera = false
     }
