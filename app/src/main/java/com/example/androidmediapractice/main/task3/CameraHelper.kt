@@ -1,6 +1,7 @@
 package com.example.androidmediapractice.main.task3
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.SurfaceTexture
@@ -30,7 +31,7 @@ class CameraHelper(
         (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
 
     private val handlerThread = HandlerThread("CameraThread")
-    private lateinit var cameraHandler: Handler
+    private val cameraHandler: Handler
 
     private var cameraCaptureSession: CameraCaptureSession? = null
 
@@ -111,6 +112,7 @@ class CameraHelper(
     }
 
 
+    @SuppressLint("MissingPermission")
     private fun openCamera() {
 
         if (ActivityCompat.checkSelfPermission(

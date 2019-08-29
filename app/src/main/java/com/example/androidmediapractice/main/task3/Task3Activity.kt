@@ -1,5 +1,6 @@
 package com.example.androidmediapractice.main.task3
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidmediapractice.R
@@ -15,9 +16,18 @@ class Task3Activity : AppCompatActivity() {
         initView()
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onRequestPermissionsResult(requestCode, grantResults)
+    }
+
     private fun initView() {
         recordVideoBtn.setOnClickListener {
-
+            openRecordWithPermissionCheck()
         }
         previewSurfaceViewBtn.setOnClickListener { }
         previewTextureViewBtn.setOnClickListener { }
@@ -25,7 +35,7 @@ class Task3Activity : AppCompatActivity() {
     }
 
     @NeedsPermission(android.Manifest.permission.CAMERA)
-    private fun openRecord() {
-
+    internal fun openRecord() {
+        startActivity(Intent(this, CaptureActivity::class.java))
     }
 }
