@@ -120,28 +120,29 @@ class PreviewSurfaceActivity : AppCompatActivity() {
     private fun yuv420ToYuv444(yuv420Bytes: ByteArray, width: Int, height: Int): ByteArray {
         val size = width * height
         val yuv444Bytes = ByteArray(width * height * 3)
-        val vStart = size + width * height / 4
 
         for (y in 0 until size) {
             yuv444Bytes[y] = yuv420Bytes[y]
         }
 
-        // Upscaling U
-        for (u in size until vStart) {
-            val currentU = yuv420Bytes[u]
-            yuv444Bytes[u] = currentU
-            yuv444Bytes[u + 1] = currentU
-            yuv444Bytes[u + width / 2] = currentU
-            yuv444Bytes[(u + width / 2) + 1] = currentU
-        }
+        val originUIndex = size
+        val originVIndex = originUIndex + width * height / 4
+        val desUIndex = size
+        val desVIndex = desUIndex + size
+        for (h in 0 until height step 2) {
+            for (w in 0 until width step 2) {
+                val originU = yuv420Bytes[originUIndex + h / 2 * width / 2 + w / 2]
+                yuv444Bytes[desUIndex + h * width + w] = originU
+                yuv444Bytes[desUIndex + h * width + w + 1] = originU
+                yuv444Bytes[desUIndex + (h + 1) * width + w] = originU
+                yuv444Bytes[desUIndex + (h + 1) * width + w + 1] = originU
 
-        // Upscaling V
-        for (v in vStart until (width * height * 1.5).roundToInt()) {
-            val currentV = yuv420Bytes[v]
-            yuv444Bytes[v] = currentV
-            yuv444Bytes[v + 1] = currentV
-            yuv444Bytes[v + width / 2] = currentV
-            yuv444Bytes[(v + width / 2) + 1] = currentV
+                val originV = yuv420Bytes[originVIndex + h / 2 * width / 2 + w / 2]
+                yuv444Bytes[desVIndex + h * width + w] = originV
+                yuv444Bytes[desVIndex + h * width + w + 1] = originV
+                yuv444Bytes[desVIndex + (h + 1) * width + w] = originV
+                yuv444Bytes[desVIndex + (h + 1) * width + w + 1] = originV
+            }
         }
 
         return yuv444Bytes
