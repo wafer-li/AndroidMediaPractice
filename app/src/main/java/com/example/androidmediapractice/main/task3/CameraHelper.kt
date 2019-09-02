@@ -29,7 +29,7 @@ class CameraHelper(
     private val surfaceView: SurfaceView? = null
 ) : LifecycleObserver {
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-    private var cameraDevice: CameraDevice? = null
+    private lateinit var cameraDevice: CameraDevice
     private lateinit var cameraCharacteristics: CameraCharacteristics
     private var cameraId: String = ""
 
@@ -50,7 +50,7 @@ class CameraHelper(
     var isRecording = false
         private set
 
-    private var outputStream: FileOutputStream? = null
+    private lateinit var outputStream: FileOutputStream
 
     private var previewSize = Size(PREVIEW_WIDTH, PREVIEW_HEIGHT)
 
@@ -160,6 +160,11 @@ class CameraHelper(
     }
 
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    private fun onResume() {
+        init()
+    }
+
     private fun createCaptureSession(cameraDevice: CameraDevice?) {
 
         if (cameraDevice == null) {
@@ -169,12 +174,7 @@ class CameraHelper(
         val surface = when {
             textureView != null -> Surface(textureView.surfaceTexture)
             surfaceView != null -> surfaceView.holder.surface
-            else -> null
-        }
-
-        if (surface == null) {
-            Toast.makeText(context, "预览 Surface 初始化错误", Toast.LENGTH_SHORT).show()
-            return
+            else -> error("Surface 错误")
         }
 
         val captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
@@ -245,18 +245,18 @@ class CameraHelper(
                 image.close()
                 GlobalScope.launch(Dispatchers.IO) {
                     byteBuffers.forEach {
-                        outputStream?.channel?.write(it)
+                        outputStream.channel.write(it)
                     }
                 }
             }, cameraHandler)
-            cameraDevice?.apply {
+            cameraDevice.apply {
                 val surface = when {
                     textureView != null -> Surface(textureView.surfaceTexture)
                     surfaceView != null -> surfaceView.holder.surface
-                    else -> null
+                    else -> error("Surface 错误")
                 }
                 val request = this.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-                request.addTarget(surface!!)
+                request.addTarget(surface)
                 request.addTarget(imageReader.surface)
                 request.set(
                     CaptureRequest.CONTROL_AE_MODE,
@@ -282,24 +282,23 @@ class CameraHelper(
             cameraCaptureSession?.close()
             createCaptureSession(cameraDevice)
 
-            outputStream?.close()
-            outputStream = null
+            outputStream.close()
             imageReader.close()
 
             isRecording = false
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun close() {
         cameraCaptureSession?.close()
         cameraCaptureSession = null
 
-        cameraDevice?.close()
-        cameraDevice = null
+        cameraDevice.close()
 
-        outputStream?.close()
-        outputStream = null
+        outputStream.close()
+
+        imageReader.close()
 
         canExchangeCamera = false
     }
