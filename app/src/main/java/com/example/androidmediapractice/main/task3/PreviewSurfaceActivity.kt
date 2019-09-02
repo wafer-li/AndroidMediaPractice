@@ -24,9 +24,9 @@ import kotlin.math.roundToInt
 class PreviewSurfaceActivity : AppCompatActivity() {
 
     companion object {
-        private const val PREVIEW_WIDTH = 1080
-        private const val PREVIEW_HEIGHT = 1920
-        private const val PREVIEW_SIZE = PREVIEW_HEIGHT * PREVIEW_WIDTH * 8 * 1.5
+        private const val PREVIEW_WIDTH = 1920
+        private const val PREVIEW_HEIGHT = 1080
+        private const val PREVIEW_SIZE = PREVIEW_HEIGHT * PREVIEW_WIDTH * 3 / 2
     }
 
     private var isPlaying = false
@@ -61,7 +61,7 @@ class PreviewSurfaceActivity : AppCompatActivity() {
             val file = File(getExternalFilesDir(null), "yuv420_888.dat")
             isPlaying = true
             file.inputStream().buffered().use {
-                val buffer = ByteArray(PREVIEW_SIZE.roundToInt())
+                val buffer = ByteArray(PREVIEW_SIZE)
                 while (isPlaying && it.read(buffer) > 0) {
                     val canvas = holder.lockCanvas()
                     canvas.drawColor(Color.BLACK)
@@ -91,9 +91,9 @@ class PreviewSurfaceActivity : AppCompatActivity() {
          * B = 1.0  2.12798     0.0
          */
 
-        for (w in 0 until width) {
-            for (h in 0 until height) {
-                val yIndex = w + h
+        for (h in 0 until height) {
+            for (w in 0 until width) {
+                val yIndex = h * width + w
                 val uIndex = yIndex + width * height
                 val vIndex = uIndex + width * height
                 val aIndex = vIndex + width * height
@@ -105,7 +105,7 @@ class PreviewSurfaceActivity : AppCompatActivity() {
                 val r = y + 1.28033 * v
                 val g = y - 0.21482 * u - 0.38509 * v
                 val b = y + 2.12798 * u
-                val a = 0xFF
+                val a = 0xff
 
                 argb8888Bytes[yIndex] = r.roundToInt().toByte()
                 argb8888Bytes[uIndex] = g.roundToInt().toByte()
@@ -136,11 +136,11 @@ class PreviewSurfaceActivity : AppCompatActivity() {
 
         // Upscaling V
         for (v in vStart until (width * height * 1.5).roundToInt()) {
-            val currentU = yuv420Bytes[v]
-            yuv444Bytes[v] = currentU
-            yuv444Bytes[v + 1] = currentU
-            yuv444Bytes[v + width / 2] = currentU
-            yuv444Bytes[(v + width / 2) + 1] = currentU
+            val currentV = yuv420Bytes[v]
+            yuv444Bytes[v] = currentV
+            yuv444Bytes[v + 1] = currentV
+            yuv444Bytes[v + width / 2] = currentV
+            yuv444Bytes[(v + width / 2) + 1] = currentV
         }
 
         return yuv444Bytes
