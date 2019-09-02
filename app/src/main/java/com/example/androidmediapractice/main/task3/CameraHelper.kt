@@ -17,9 +17,6 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -239,18 +236,32 @@ class CameraHelper(
         if (!isRecording) {
             isRecording = true
             outputStream = file.outputStream()
+            val writerHandlerThread = HandlerThread("writerHandlerThread").apply { start() }
+            val writerHandler = Handler(writerHandlerThread.looper)
+
             imageReader.setOnImageAvailableListener({ reader ->
-                val image = reader.acquireLatestImage()
-                val byteBuffers = image.planes.map {
-                    it.buffer.duplicate()
-                }
-                image.close()
-                GlobalScope.launch(Dispatchers.IO) {
-                    byteBuffers.forEach {
-                        outputStream.channel.write(it)
+                if (isRecording) {
+                    val image = reader.acquireLatestImage()
+                    val bytes = ByteArray(imageReader.width * imageReader.height * 3 / 2)
+                    var count = 0
+                    try {
+                        image.planes.forEach {
+                            val buffer = it.buffer
+                            val pixelStride = it.pixelStride
+                            for (i in 0 until buffer.remaining() step pixelStride) {
+                                bytes[count++] = buffer.get(i)
+                            }
+                        }
+                        outputStream.write(bytes)
+                    } catch (e: IllegalStateException) {
+                    } finally {
+                        image.close()
                     }
+                    image.close()
                 }
-            }, cameraHandler)
+            }, writerHandler)
+
+
             cameraDevice.apply {
                 val surface = when {
                     textureView != null -> Surface(textureView.surfaceTexture)
