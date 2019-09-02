@@ -83,6 +83,7 @@ class PreviewSurfaceActivity : AppCompatActivity() {
         // upscaling to yuv444
         val yuv444Bytes = yuv420ToYuv444(yuv420Bytes, width, height)
         val argb8888Bytes = ByteArray(yuv444Bytes.size + (width * height))
+        var count = 0
 
         /**
          * Transformation Matrix : BT.709
@@ -107,10 +108,10 @@ class PreviewSurfaceActivity : AppCompatActivity() {
                 val b = y + 2.12798 * u
                 val a = 0xff
 
-                argb8888Bytes[yIndex] = r.roundToInt().toByte()
-                argb8888Bytes[uIndex] = g.roundToInt().toByte()
-                argb8888Bytes[vIndex] = b.roundToInt().toByte()
-                argb8888Bytes[aIndex] = a.toByte()
+                argb8888Bytes[count++] = r.roundToInt().toByte()
+                argb8888Bytes[count++] = g.roundToInt().toByte()
+                argb8888Bytes[count++] = b.roundToInt().toByte()
+                argb8888Bytes[count++] = a.toByte()
             }
         }
         return argb8888Bytes
