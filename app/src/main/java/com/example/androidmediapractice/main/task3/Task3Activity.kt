@@ -29,7 +29,9 @@ class Task3Activity : AppCompatActivity() {
         recordVideoBtn.setOnClickListener {
             openRecordWithPermissionCheck()
         }
-        previewSurfaceViewBtn.setOnClickListener { }
+        previewSurfaceViewBtn.setOnClickListener {
+            startActivity(Intent(this, PreviewSurfaceActivity::class.java))
+        }
         previewTextureViewBtn.setOnClickListener { }
         nv21CallbackBtn.setOnClickListener { }
     }

@@ -161,8 +161,10 @@ class CameraHelper(
 
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    private fun onResume() {
-        init()
+    internal fun onResume() {
+        if (cameraCaptureSession == null) {
+            init()
+        }
     }
 
     private fun createCaptureSession(cameraDevice: CameraDevice?) {
