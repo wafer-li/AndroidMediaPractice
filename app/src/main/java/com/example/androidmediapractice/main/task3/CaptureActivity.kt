@@ -40,6 +40,6 @@ class CaptureActivity : AppCompatActivity() {
     }
 
     private fun obtainFile(): File {
-        return File(getExternalFilesDir(null), "yuv420_888.dat")
+        return File(getExternalFilesDir(null), "yuv420_888.yuv")
     }
 }
