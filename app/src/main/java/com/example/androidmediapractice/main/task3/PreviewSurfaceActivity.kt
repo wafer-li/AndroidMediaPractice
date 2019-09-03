@@ -64,7 +64,7 @@ class PreviewSurfaceActivity : AppCompatActivity() {
     @WorkerThread
     internal fun startPlay(holder: SurfaceHolder) {
         GlobalScope.launch(Dispatchers.IO) {
-            val file = File(getExternalFilesDir(null), "yuv420_888.dat")
+            val file = File(getExternalFilesDir(null), "yuv420_888.yuv")
             isPlaying = true
             file.inputStream().buffered().use {
                 val buffer = ByteArray(PREVIEW_SIZE)
