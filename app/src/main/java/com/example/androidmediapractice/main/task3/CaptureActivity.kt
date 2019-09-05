@@ -14,6 +14,8 @@ import android.os.HandlerThread
 import android.util.Log
 import android.util.Range
 import android.util.Size
+import android.util.SparseIntArray
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.widget.Toast
 import androidx.annotation.WorkerThread
@@ -34,6 +36,25 @@ import java.util.concurrent.TimeUnit
 
 @RuntimePermissions
 class CaptureActivity : AppCompatActivity() {
+    companion object {
+        private const val DEFAULT_ORIENTATION = 90
+        private const val INVERSED_ORIENTATION = 270
+
+        private val DEFAULT_ORIENTATIONS = SparseIntArray().apply {
+            append(Surface.ROTATION_0, 90)
+            append(Surface.ROTATION_90, 0)
+            append(Surface.ROTATION_180, 270)
+            append(Surface.ROTATION_270, 180)
+        }
+
+        private val INVERSED_ORIENTATIONS = SparseIntArray().apply {
+            append(Surface.ROTATION_0, 270)
+            append(Surface.ROTATION_90, 180)
+            append(Surface.ROTATION_180, 90)
+            append(Surface.ROTATION_270, 0)
+        }
+    }
+
     private var cameraDevice: CameraDevice? = null
 
     private var captureSession: CameraCaptureSession? = null
@@ -301,6 +322,32 @@ class CaptureActivity : AppCompatActivity() {
             }
         }
         return bytes
+    }
+
+    /**
+     * Rotate the YUV420 image bytes by rotation
+     */
+    private fun rotate(bytes: ByteArray, degree: Int, width: Int, height: Int): ByteArray {
+        val newBytes = ByteArray(bytes.size)
+        fun rotate90() {
+
+        }
+
+        fun rotate180() {
+
+        }
+
+        fun rotate270() {
+
+        }
+
+        when (degree) {
+            90 -> rotate90()
+            180 -> rotate180()
+            270 -> rotate270()
+        }
+
+        return newBytes
     }
 
     @WorkerThread
