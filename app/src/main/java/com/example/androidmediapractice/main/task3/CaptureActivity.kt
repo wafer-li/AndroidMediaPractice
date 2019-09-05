@@ -331,60 +331,6 @@ class CaptureActivity : AppCompatActivity() {
         return bytes
     }
 
-    private fun rotateYuv420(bytes: ByteArray, degree: Int, width: Int, height: Int): ByteArray {
-        if (degree == 0) return bytes
-        val yBytes = bytes.copyOfRange(0, width * height)
-        val rotatedYBytes = rotate(yBytes, degree, width, height)
-        val uBytes = bytes.copyOfRange(width * height, (5 / 4) * width * height)
-        val rotatedUBytes = rotate(uBytes, degree, width, height)
-        val vBytes = bytes.copyOfRange((5 / 4) * width * height, bytes.size)
-        val rotatedVBytes = rotate(vBytes, degree, width, height)
-        return rotatedYBytes + rotatedUBytes + rotatedVBytes
-    }
-
-    /**
-     * Rotate the matrix [bytes] by [degree]
-     */
-    private fun rotate(bytes: ByteArray, degree: Int, width: Int, height: Int): ByteArray {
-        if (bytes.isEmpty()) return bytes
-        if (degree == 0) return bytes
-        val newBytes = ByteArray(bytes.size)
-        fun rotate90() {
-            var count = 0
-            for (w in 0 until width) {
-                for (h in height - 1 downTo 0) {
-                    newBytes[count++] = bytes[h * width + w]
-                }
-            }
-        }
-
-        fun rotate180() {
-            var count = 0
-            for (h in height - 1 downTo 0) {
-                for (w in width - 1 downTo 0) {
-                    newBytes[count++] = bytes[h * width + w]
-                }
-            }
-        }
-
-        fun rotate270() {
-            var count = 0
-            for (h in 0 until height) {
-                for (w in width - 1 downTo 0) {
-                    newBytes[count++] = bytes[h * width + w]
-                }
-            }
-        }
-
-        when (degree) {
-            90 -> rotate90()
-            180 -> rotate180()
-            270 -> rotate270()
-        }
-
-        return newBytes
-    }
-
     @WorkerThread
     private fun writeToFile(bytes: ByteArray) =
         GlobalScope.launch(Dispatchers.IO) {
