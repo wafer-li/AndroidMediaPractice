@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Range
 import android.util.Size
 import android.view.SurfaceHolder
 import android.widget.Toast
@@ -53,6 +54,8 @@ class CaptureActivity : AppCompatActivity() {
     private var sensorOrientation = 0
 
     private var cameraFacing = CameraCharacteristics.LENS_FACING_BACK
+
+    private var range: Range<Int> = Range(30, 30)
 
     private val stateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(cameraDevice: CameraDevice) {
@@ -174,6 +177,10 @@ class CaptureActivity : AppCompatActivity() {
                     ?: throw RuntimeException("Cannot get video and preview size")
             sensorOrientation =
                 cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+            range =
+                cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)
+                    ?.lastOrNull() ?: range
+
             videoSize = chooseVideoSize(configMap.getOutputSizes(ImageReader::class.java))
             previewSize = chooseOptimalSize(
                 configMap.getOutputSizes(SurfaceTexture::class.java),
@@ -318,6 +325,7 @@ class CaptureActivity : AppCompatActivity() {
                 .apply {
                     addTarget(previewSurface)
                     addTarget(recordSurface)
+                    set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, range)
                 }
 
             cameraDevice.createCaptureSession(
