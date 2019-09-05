@@ -299,6 +299,13 @@ class CaptureActivity : AppCompatActivity() {
 
     private fun setUpImageReader() {
         outputStream = obtainFile().outputStream()
+        val rotation = windowManager.defaultDisplay.rotation
+        val degree = when (sensorOrientation) {
+            DEFAULT_ORIENTATION -> DEFAULT_ORIENTATIONS[rotation]
+            INVERSED_ORIENTATION -> INVERSED_ORIENTATIONS[rotation]
+            else -> 0
+        }
+        outputStream?.write(degree)
         imageReader?.setOnImageAvailableListener({ reader ->
             val image = reader.acquireLatestImage()
             if (isRecordingVideo) {
@@ -324,21 +331,49 @@ class CaptureActivity : AppCompatActivity() {
         return bytes
     }
 
+    private fun rotateYuv420(bytes: ByteArray, degree: Int, width: Int, height: Int): ByteArray {
+        if (degree == 0) return bytes
+        val yBytes = bytes.copyOfRange(0, width * height)
+        val rotatedYBytes = rotate(yBytes, degree, width, height)
+        val uBytes = bytes.copyOfRange(width * height, (5 / 4) * width * height)
+        val rotatedUBytes = rotate(uBytes, degree, width, height)
+        val vBytes = bytes.copyOfRange((5 / 4) * width * height, bytes.size)
+        val rotatedVBytes = rotate(vBytes, degree, width, height)
+        return rotatedYBytes + rotatedUBytes + rotatedVBytes
+    }
+
     /**
-     * Rotate the YUV420 image bytes by rotation
+     * Rotate the matrix [bytes] by [degree]
      */
     private fun rotate(bytes: ByteArray, degree: Int, width: Int, height: Int): ByteArray {
+        if (bytes.isEmpty()) return bytes
+        if (degree == 0) return bytes
         val newBytes = ByteArray(bytes.size)
         fun rotate90() {
-
+            var count = 0
+            for (w in 0 until width) {
+                for (h in height - 1 downTo 0) {
+                    newBytes[count++] = bytes[h * width + w]
+                }
+            }
         }
 
         fun rotate180() {
-
+            var count = 0
+            for (h in height - 1 downTo 0) {
+                for (w in width - 1 downTo 0) {
+                    newBytes[count++] = bytes[h * width + w]
+                }
+            }
         }
 
         fun rotate270() {
-
+            var count = 0
+            for (h in 0 until height) {
+                for (w in width - 1 downTo 0) {
+                    newBytes[count++] = bytes[h * width + w]
+                }
+            }
         }
 
         when (degree) {
@@ -351,11 +386,12 @@ class CaptureActivity : AppCompatActivity() {
     }
 
     @WorkerThread
-    private fun writeToFile(bytes: ByteArray) = GlobalScope.launch(Dispatchers.IO) {
-        if (isRecordingVideo) {
-            outputStream?.write(bytes)
+    private fun writeToFile(bytes: ByteArray) =
+        GlobalScope.launch(Dispatchers.IO) {
+            if (isRecordingVideo) {
+                outputStream?.write(bytes)
+            }
         }
-    }
 
     private fun startVideoRecording() {
         val cameraDevice = this.cameraDevice

@@ -3,6 +3,7 @@ package com.example.androidmediapractice.main.task3
 import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.os.Bundle
 import android.view.SurfaceHolder
@@ -67,6 +68,7 @@ class PreviewSurfaceActivity : AppCompatActivity() {
             val file = File(getExternalFilesDir(null), "yuv420_888.yuv")
             isPlaying = true
             file.inputStream().buffered().use {
+                val rotation = it.read()
                 val buffer = ByteArray(PREVIEW_SIZE)
                 while (isPlaying && it.read(buffer) > 0) {
                     val canvas = holder.lockCanvas()
@@ -77,7 +79,11 @@ class PreviewSurfaceActivity : AppCompatActivity() {
                     val bitmap =
                         Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
                     bitmap.copyPixelsFromBuffer(argb8888Buffer)
-                    canvas.drawBitmap(bitmap, 0F, 0F, Paint())
+                    val matrix = Matrix()
+                    matrix.postRotate(rotation.toFloat(), bitmap.width / 2F, bitmap.height / 2F)
+                    val rotatedBitmap =
+                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                    canvas.drawBitmap(rotatedBitmap, 0F, 0F, Paint())
                     holder.unlockCanvasAndPost(canvas)
                 }
             }
