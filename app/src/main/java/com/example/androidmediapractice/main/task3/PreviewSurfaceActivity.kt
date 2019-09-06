@@ -80,9 +80,9 @@ class PreviewSurfaceActivity : AppCompatActivity() {
                     bitmap.copyPixelsFromBuffer(argb8888Buffer)
                     val matrix = Matrix()
                     matrix.postRotate(rotation.toFloat(), bitmap.width / 2F, bitmap.height / 2F)
-                    val rotatedBitmap =
-                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                    canvas.drawBitmap(rotatedBitmap, 0F, 0F, Paint())
+                    val translate = (PREVIEW_WIDTH - PREVIEW_HEIGHT) / 2F
+                    matrix.postTranslate(-translate, translate)
+                    canvas.drawBitmap(bitmap, matrix, Paint())
                     holder.unlockCanvasAndPost(canvas)
                 }
             }
