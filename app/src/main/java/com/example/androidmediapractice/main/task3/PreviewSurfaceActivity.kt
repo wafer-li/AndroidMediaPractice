@@ -41,7 +41,6 @@ class PreviewSurfaceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_preview_surface)
-        initView()
     }
 
     private fun initView() {
@@ -88,6 +87,20 @@ class PreviewSurfaceActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initView()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPlay()
+    }
+
+    private fun stopPlay() {
+        isPlaying = false
     }
 
     private fun initTable() {
