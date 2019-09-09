@@ -29,6 +29,7 @@
       android:launchMode="singleTask" />
     <activity android:name=".main.task3.PreviewSurfaceActivity" />
     <activity android:name=".main.task3.PreviewTextureActivity" />
+    <activity android:name=".main.task4.Task4Activity" />
   </application>
 
   <dist:module dist:instant="true" />
