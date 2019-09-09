@@ -28,6 +28,7 @@
       android:name=".main.task3.CaptureActivity"
       android:launchMode="singleTask" />
     <activity android:name=".main.task3.PreviewSurfaceActivity" />
+    <activity android:name=".main.task3.PreviewTextureActivity" />
   </application>
 
   <dist:module dist:instant="true" />

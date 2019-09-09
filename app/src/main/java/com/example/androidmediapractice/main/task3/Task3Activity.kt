@@ -32,7 +32,9 @@ class Task3Activity : AppCompatActivity() {
         previewSurfaceViewBtn.setOnClickListener {
             startActivity(Intent(this, PreviewSurfaceActivity::class.java))
         }
-        previewTextureViewBtn.setOnClickListener { }
+        previewTextureViewBtn.setOnClickListener {
+            startActivity(Intent(this, PreviewTextureActivity::class.java))
+        }
         nv21CallbackBtn.setOnClickListener { }
     }
 
