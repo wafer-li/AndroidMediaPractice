@@ -57,29 +57,32 @@ class PreviewTextureActivity : AppCompatActivity() {
     internal fun startPlay(texture: SurfaceTexture?) {
         if (texture == null) return
         val surface = Surface(texture)
-        isPlaying = true
         GlobalScope.launch(Dispatchers.IO) {
-            File(getExternalFilesDir(null), "yuv420_888.yuv").inputStream().buffered().use {
+            val file = File(getExternalFilesDir(null), "yuv420_888.yuv")
+            isPlaying = true
+            file.inputStream().buffered().use {
                 val rotation = it.read()
-                val yuv420Bytes = ByteArray(PREVIEW_SIZE)
-                val isExchangeWidthAndHeight = rotation == 90 || rotation == 270
-                val rect = Rect(
-                    0, 0,
-                    if (isExchangeWidthAndHeight) PREVIEW_HEIGHT else PREVIEW_WIDTH,
-                    if (isExchangeWidthAndHeight) PREVIEW_WIDTH else PREVIEW_HEIGHT
-                )
-                while (isPlaying && it.read(yuv420Bytes) > 0) {
-                    val canvas = surface.lockCanvas(rect)
-                    val argbBytes =
-                        YuvUtil.convertYuv420ToARGB(yuv420Bytes, PREVIEW_WIDTH, PREVIEW_HEIGHT)
+                val buffer = ByteArray(PREVIEW_SIZE)
+                while (isPlaying && it.read(buffer) > 0) {
+                    val canvas = surface.lockCanvas(null)
+                    canvas.drawColor(Color.BLACK)
+                    val argb8888ByteArray =
+                        YuvUtil.convertYuv420ToARGB(
+                            buffer,
+                            PREVIEW_WIDTH,
+                            PREVIEW_HEIGHT
+                        )
+                    val argb8888Buffer = ByteBuffer.wrap(argb8888ByteArray)
                     val bitmap =
-                        Bitmap.createBitmap(PREVIEW_WIDTH, PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
-                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbBytes))
-                    val matrix = Matrix().apply {
-                        postRotate(rotation.toFloat())
-                        val translate = (PREVIEW_WIDTH - PREVIEW_HEIGHT) / 2F
-                        postTranslate(-translate, translate)
-                    }
+                        Bitmap.createBitmap(
+                            PREVIEW_WIDTH,
+                            PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888
+                        )
+                    bitmap.copyPixelsFromBuffer(argb8888Buffer)
+                    val matrix = Matrix()
+                    matrix.postRotate(rotation.toFloat(), bitmap.width / 2F, bitmap.height / 2F)
+                    val translate = (PREVIEW_WIDTH - PREVIEW_HEIGHT) / 2F
+                    matrix.postTranslate(-translate, translate)
                     canvas.drawBitmap(bitmap, matrix, Paint())
                     surface.unlockCanvasAndPost(canvas)
                 }
