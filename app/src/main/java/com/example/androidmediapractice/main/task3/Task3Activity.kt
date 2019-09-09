@@ -35,7 +35,6 @@ class Task3Activity : AppCompatActivity() {
         previewTextureViewBtn.setOnClickListener {
             startActivity(Intent(this, PreviewTextureActivity::class.java))
         }
-        nv21CallbackBtn.setOnClickListener { }
     }
 
     @NeedsPermission(android.Manifest.permission.CAMERA)
