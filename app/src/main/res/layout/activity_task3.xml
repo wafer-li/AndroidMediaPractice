@@ -28,9 +28,4 @@
     android:layout_height="wrap_content"
     android:text="@string/preview_video_texture_view"/>
 
-  <Button
-    android:id="@+id/nv21CallbackBtn"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="@string/nv21_callback"/>
 </LinearLayout>

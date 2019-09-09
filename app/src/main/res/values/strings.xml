@@ -24,4 +24,5 @@
   <string name="preview_video_surface_view">Preview Video Surface View</string>
   <string name="preview_video_texture_view">Preview Video Texture View</string>
   <string name="nv21_callback">NV21 Data Callback</string>
+  <string name="capture">Capture</string>
 </resources>
