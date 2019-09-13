@@ -22,9 +22,6 @@ class MediaExtractorActivity : AppCompatActivity() {
     private lateinit var mediaFormat: MediaFormat
     private lateinit var mediaDecoder: MediaCodec
 
-    private var width = 0
-    private var height = 0
-
     private var isPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +50,6 @@ class MediaExtractorActivity : AppCompatActivity() {
     internal fun startPlay() {
         GlobalScope.launch(Dispatchers.IO) {
             initMediaExtractor()
-            initVideoSpecs(mediaFormat)
             initCodec(mediaFormat)
             play()
         }
@@ -61,7 +57,6 @@ class MediaExtractorActivity : AppCompatActivity() {
 
     private fun initMediaExtractor() {
         mediaExtractor = MediaExtractor()
-        mediaExtractor.setDataSource(resources.assets.openFd("sample.mp4"))
         val trackIndex = mediaExtractor.findTrackIndex {
             val mime = it.getString(MediaFormat.KEY_MIME)
             mime?.startsWith("video/") ?: false
@@ -70,10 +65,6 @@ class MediaExtractorActivity : AppCompatActivity() {
         mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
     }
 
-    private fun initVideoSpecs(mediaFormat: MediaFormat) {
-        width = mediaFormat.getInteger(MediaFormat.KEY_WIDTH)
-        height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT)
-    }
 
     private fun initCodec(mediaFormat: MediaFormat) {
         val mime = mediaFormat.getString(MediaFormat.KEY_MIME) ?: error("MIME Empty")
@@ -84,7 +75,7 @@ class MediaExtractorActivity : AppCompatActivity() {
     private fun play() {
         isPlaying = true
         mediaDecoder.start()
-        do {
+        while (true) {
             val isEos =
                 mediaExtractor.sampleFlags and MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM
             if (!isEos) {
@@ -120,8 +111,7 @@ class MediaExtractorActivity : AppCompatActivity() {
             } else if (outputBufferIndex >= 0) {
                 mediaDecoder.releaseOutputBuffer(outputBufferIndex, true)
             }
-
-        } while (true)
+        }
     }
 
     private fun stopPlay() {
