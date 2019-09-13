@@ -30,9 +30,7 @@
     <activity android:name=".main.task3.PreviewSurfaceActivity" />
     <activity android:name=".main.task3.PreviewTextureActivity" />
     <activity android:name=".main.task4.Task4Activity" />
-    <activity
-      android:name=".main.task4.MediaExtractorActivity"
-      android:screenOrientation="landscape" />
+      <activity android:name=".main.task4.MediaExtractorActivity" />
   </application>
 
   <dist:module dist:instant="true" />
