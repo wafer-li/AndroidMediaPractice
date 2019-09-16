@@ -42,8 +42,10 @@ class MediaMuxHelper(inputPath: String, outputPath: String) {
 
     private fun writeToMuxer(trackIndex: Int) {
         mediaExtractor.selectTrack(trackIndex)
+        val bufferSize =
+            mediaExtractor.getTrackFormat(trackIndex).getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
+        val buffer = ByteBuffer.allocate(bufferSize)
         do {
-            val buffer = ByteBuffer.wrap(ByteArray(1024 * 1024))
             val bufferInfo = MediaCodec.BufferInfo()
             val size = mediaExtractor.readSampleData(buffer, 0)
             bufferInfo.flags =
