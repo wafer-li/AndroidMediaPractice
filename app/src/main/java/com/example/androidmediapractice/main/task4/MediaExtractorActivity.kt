@@ -88,7 +88,7 @@ class MediaExtractorActivity : AppCompatActivity() {
                         mediaExtractor.readSampleData(buffer, 0)
                     } else -1
                     val flag =
-                        mediaExtractor.sampleFlags.let { if (size <= 0) it and MediaCodec.BUFFER_FLAG_END_OF_STREAM else it }
+                        mediaExtractor.sampleFlags.let { if (size <= 0) it or MediaCodec.BUFFER_FLAG_END_OF_STREAM else it }
 
                     mediaDecoder.queueInputBuffer(
                         inputBufferIndex,
