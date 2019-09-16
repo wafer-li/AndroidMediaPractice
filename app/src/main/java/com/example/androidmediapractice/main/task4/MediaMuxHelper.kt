@@ -16,10 +16,15 @@ class MediaMuxHelper(inputPath: String, outputPath: String) {
     private val mediaMuxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
     fun mux(context: Context) = GlobalScope.launch(Dispatchers.IO) {
+        var rotation = 0
         for (i in 0 until mediaExtractor.trackCount) {
             val trackFormat = mediaExtractor.getTrackFormat(i)
+            if (trackFormat.getString(MediaFormat.KEY_MIME)?.startsWith("video/") == true) {
+                rotation = trackFormat.getInteger("rotation-degrees")
+            }
             mediaMuxer.addTrack(trackFormat)
         }
+        mediaMuxer.setOrientationHint(rotation)
         mediaMuxer.start()
         for (i in 0 until mediaExtractor.trackCount) {
             writeToMuxer(i)
