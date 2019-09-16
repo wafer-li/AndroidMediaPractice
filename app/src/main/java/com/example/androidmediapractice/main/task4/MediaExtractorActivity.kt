@@ -14,6 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
+import java.io.File
 
 @RuntimePermissions
 class MediaExtractorActivity : AppCompatActivity() {
@@ -57,6 +58,7 @@ class MediaExtractorActivity : AppCompatActivity() {
 
     private fun initMediaExtractor() {
         mediaExtractor = MediaExtractor()
+        mediaExtractor.setDataSource(File(getExternalFilesDir(null), "sample.mp4").absolutePath)
         val trackIndex = mediaExtractor.findTrackIndex {
             val mime = it.getString(MediaFormat.KEY_MIME)
             mime?.startsWith("video/") ?: false
