@@ -3,6 +3,7 @@ package com.example.androidmediapractice.main.task4
 import android.content.Context
 import android.media.MediaCodec
 import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
@@ -40,13 +41,11 @@ class MediaMuxHelper(inputPath: String, outputPath: String) {
             val buffer = ByteBuffer.wrap(ByteArray(1024 * 1024))
             val bufferInfo = MediaCodec.BufferInfo()
             val size = mediaExtractor.readSampleData(buffer, 0)
-            if (size < 0) {
-                break
-            }
-            bufferInfo.flags = mediaExtractor.sampleFlags
+            bufferInfo.flags =
+                if (mediaExtractor.sampleFlags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != MediaCodec.BUFFER_FLAG_END_OF_STREAM) MediaCodec.BUFFER_FLAG_KEY_FRAME else MediaCodec.BUFFER_FLAG_END_OF_STREAM
             bufferInfo.offset = 0
-            bufferInfo.size = size
-            bufferInfo.presentationTimeUs += mediaExtractor.sampleTime
+            bufferInfo.size = if (size >= 0) size else 0
+            bufferInfo.presentationTimeUs += mediaExtractor.sampleTime.let { if (it >= 0) it else 0 }
             mediaMuxer.writeSampleData(trackIndex, buffer, bufferInfo)
             val isEos =
                 mediaExtractor.sampleFlags and MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM
