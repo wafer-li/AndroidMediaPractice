@@ -13,6 +13,9 @@
     <item>
       学习 Android 平台的 MediaExtractor 和 MediaMuxer API，知道如何解析和封装 mp4 文件
     </item>
+    <item>
+      学习 Android 平台 OpenGL ES API，了解 OpenGL 开发的基本流程，使用 OpenGL 绘制一个三角形
+    </item>
   </string-array>
 
   <string-array name="task_activities">
@@ -20,5 +23,6 @@
     <item>task2.Task2Activity</item>
     <item>task3.Task3Activity</item>
     <item>task4.Task4Activity</item>
+    <item>task5.Task5Activity</item>
   </string-array>
 </resources>
