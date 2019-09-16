@@ -58,7 +58,11 @@ class MediaExtractorActivity : AppCompatActivity() {
 
     private fun initMediaExtractor() {
         mediaExtractor = MediaExtractor()
-        mediaExtractor.setDataSource(File(getExternalFilesDir(null), "sample.mp4").absolutePath)
+        val file = File(getExternalFilesDir(null), "output.mp4").let {
+            if (it.exists()) it
+            else File(getExternalFilesDir(null), "sample.mp4")
+        }
+        mediaExtractor.setDataSource(file.absolutePath)
         val trackIndex = mediaExtractor.findTrackIndex {
             val mime = it.getString(MediaFormat.KEY_MIME)
             mime?.startsWith("video/") ?: false
