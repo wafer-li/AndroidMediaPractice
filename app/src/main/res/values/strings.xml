@@ -25,4 +25,9 @@
   <string name="preview_video_texture_view">Preview Video Texture View</string>
   <string name="nv21_callback">NV21 Data Callback</string>
   <string name="capture">Capture</string>
+
+  <!-- Task 4 -->
+  <string name="task4_title">Task4</string>
+  <string name="media_extractor">Media Extractor</string>
+  <string name="media_muxer">Media Muxer</string>
 </resources>
