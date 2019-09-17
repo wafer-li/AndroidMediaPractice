@@ -2,6 +2,7 @@ package com.example.androidmediapractice.main.task5
 
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
+import android.opengl.Matrix
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import java.nio.ByteBuffer
@@ -13,13 +14,34 @@ import javax.microedition.khronos.opengles.GL10
 class Task5Activity : AppCompatActivity() {
     private lateinit var glSurfaceView: GLSurfaceView
     private lateinit var triangle: Triangle
+
+    private val vPMatirx = FloatArray(16)
+    private val projectionMatrix = FloatArray(16)
+    private val viewMatrix = FloatArray(16)
+
     private val renderer = object : GLSurfaceView.Renderer {
         override fun onDrawFrame(p0: GL10?) {
-            triangle.draw()
+            Matrix.setLookAtM(
+                viewMatrix, 0,
+                0f, 0f, -3f,
+                0f, 0f, 0f,
+                0f, 1f, 0f
+            )
+
+            Matrix.multiplyMM(vPMatirx, 0, projectionMatrix, 0, viewMatrix, 0)
+            triangle.draw(vPMatirx)
         }
 
-        override fun onSurfaceChanged(p0: GL10?, p1: Int, p2: Int) {
-            glViewport(0, 0, p1, p2)
+        override fun onSurfaceChanged(p0: GL10?, width: Int, height: Int) {
+            glViewport(0, 0, width, height)
+            val ratio: Float = if (width > height)
+                width.toFloat() / height.toFloat()
+            else height.toFloat() / width.toFloat()
+            if (width > height) {
+                Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
+            } else {
+                Matrix.frustumM(projectionMatrix, 0, -1f, 1f, -ratio, ratio, 3f, 7f)
+            }
         }
 
         override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
@@ -69,9 +91,10 @@ class Task5Activity : AppCompatActivity() {
         private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
 
         private val vertexShaderCode = """
+            uniform mat4 uMvpMatrix;
             attribute vec4 vPosition;
             void main() {
-                gl_Position = vPosition;
+                gl_Position = uMvpMatrix * vPosition;
             }
         """.trimIndent()
 
@@ -99,7 +122,7 @@ class Task5Activity : AppCompatActivity() {
         private val vertexCount = triangleCoords.size / COUNT_PER_VERTEX
         private val vertexStride = COUNT_PER_VERTEX * 4
 
-        fun draw() {
+        fun draw(mvpMatrix: FloatArray) {
             glUseProgram(program)
 
             glGetAttribLocation(program, "vPosition").also {
@@ -115,6 +138,10 @@ class Task5Activity : AppCompatActivity() {
 
                 glGetUniformLocation(program, "vColor").also { colorHandle ->
                     glUniform4fv(colorHandle, 1, color, 0)
+                }
+
+                glGetUniformLocation(program, "uMvpMatrix").also { uMvpMatrixHandle ->
+                    glUniformMatrix4fv(uMvpMatrixHandle, 1, false, mvpMatrix, 0)
                 }
 
                 glDrawArrays(GL_TRIANGLES, 0, vertexCount)
