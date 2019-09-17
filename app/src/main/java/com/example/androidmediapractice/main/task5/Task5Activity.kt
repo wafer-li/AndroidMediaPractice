@@ -114,9 +114,8 @@ class Task5Activity : AppCompatActivity() {
             glAttachShader(it, fragmentShader)
 
             glLinkProgram(it)
-
-            glDetachShader(it, vertexShader)
-            glDetachShader(it, fragmentShader)
+            glDeleteShader(vertexShader)
+            glDeleteShader(fragmentShader)
         }
 
         private val vertexCount = triangleCoords.size / COUNT_PER_VERTEX
