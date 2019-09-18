@@ -150,7 +150,7 @@ class Task5Activity : AppCompatActivity() {
     }
 }
 
-private fun loadShader(type: Int, shaderCode: String): Int {
+fun loadShader(type: Int, shaderCode: String): Int {
     return glCreateShader(type).also {
         glShaderSource(it, shaderCode)
         glCompileShader(it)
