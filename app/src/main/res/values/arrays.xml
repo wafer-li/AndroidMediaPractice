@@ -19,6 +19,9 @@
     <item>
       学习 Android 平台 OpenGL ES API，学习纹理绘制，能够使用 OpenGL 显示一张图片
     </item>
+    <item>
+      学习 MediaCodec API，完成音频 AAC 硬编、硬解
+    </item>
   </string-array>
 
   <string-array name="task_activities">
@@ -28,5 +31,6 @@
     <item>task4.Task4Activity</item>
     <item>task5.Task5Activity</item>
     <item>task6.Task6Activity</item>
+    <item>task7.Task7Activity</item>
   </string-array>
 </resources>
