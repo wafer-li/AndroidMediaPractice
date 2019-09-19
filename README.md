@@ -10,7 +10,7 @@
 
 - [x] 学习 Android 平台 OpenGL ES API，了解 OpenGL 开发的基本流程，使用 OpenGL 绘制一个三角形
 
-- [ ] 学习 Android 平台 OpenGL ES API，学习纹理绘制，能够使用 OpenGL 显示一张图片
+- [x] 学习 Android 平台 OpenGL ES API，学习纹理绘制，能够使用 OpenGL 显示一张图片
 
 - [ ] 学习 MediaCodec API，完成音频 AAC 硬编、硬解
 

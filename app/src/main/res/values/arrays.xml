@@ -16,6 +16,9 @@
     <item>
       学习 Android 平台 OpenGL ES API，了解 OpenGL 开发的基本流程，使用 OpenGL 绘制一个三角形
     </item>
+    <item>
+      学习 Android 平台 OpenGL ES API，学习纹理绘制，能够使用 OpenGL 显示一张图片
+    </item>
   </string-array>
 
   <string-array name="task_activities">
@@ -24,5 +27,6 @@
     <item>task3.Task3Activity</item>
     <item>task4.Task4Activity</item>
     <item>task5.Task5Activity</item>
+    <item>task6.Task6Activity</item>
   </string-array>
 </resources>
