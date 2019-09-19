@@ -183,7 +183,7 @@ class Square {
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_SHORT, 0)
+        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, 0)
         glDisableVertexAttribArray(positionHandle)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
