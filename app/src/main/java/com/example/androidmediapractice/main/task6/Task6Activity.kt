@@ -82,10 +82,10 @@ class Square {
     }
 
     private val squareCoords = floatArrayOf(
-        -0.5f, 0.5f, 0.0f, 0f, 0.5f,     // top left
+        -0.5f, 0.5f, 0.0f, 0f, 1f,     // top left
         -0.5f, -0.5f, 0.0f, 0f, 0f,     // bottom left
-        0.5f, -0.5f, 0.0f, 0.5f, 0f,    // bottom right
-        0.5f, 0.5f, 0.0f, 0.5f, 0.5f   // top right
+        0.5f, -0.5f, 0.0f, 1f, 0f,    // bottom right
+        0.5f, 0.5f, 0.0f, 1f, 1f   // top right
     )
 
     private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
@@ -101,8 +101,8 @@ class Square {
             attribute vec2 vTexCoord;
             varying vec2 texCoord;
                 void main() {
-                  gl_Position = uMvpMatrix * vec4(vPosition,1.0);
                   texCoord = vTexCoord;
+                  gl_Position = uMvpMatrix * vec4(vPosition,1.0);
                 }""".trimIndent()
 
     @Language("GLSL")
@@ -112,7 +112,7 @@ class Square {
                 uniform sampler2D ourTexture;
                 varying vec2 texCoord;
                 void main() {
-                  gl_FragColor = vColor;
+                  gl_FragColor = texture2D(ourTexture, texCoord); 
                 }""".trimIndent()
 
     private val vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderCode)
@@ -235,7 +235,7 @@ class Square {
         }
 
         glGetUniformLocation(program, "ourTexture").also { ourTexTureHandle ->
-            glUniform1i(ourTexTureHandle, texture)
+            glUniform1i(ourTexTureHandle, 0)
         }
 
         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_INT, 0)
