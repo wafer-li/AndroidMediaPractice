@@ -82,10 +82,10 @@ class Square {
     }
 
     private val squareCoords = floatArrayOf(
-        -0.5f, 0.5f, 0.0f, 0f, 1f,     // top left
-        -0.5f, -0.5f, 0.0f, 0f, 0f,     // bottom left
-        0.5f, -0.5f, 0.0f, 1f, 0f,    // bottom right
-        0.5f, 0.5f, 0.0f, 1f, 1f   // top right
+        -1f, 1f, 0.0f, 0f, 1f,     // top left
+        -1f, -1f, 0.0f, 0f, 0f,     // bottom left
+        1f, -1f, 0.0f, 1f, 0f,    // bottom right
+        1f, 1f, 0.0f, 1f, 1f   // top right
     )
 
     private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
@@ -102,7 +102,7 @@ class Square {
             varying vec2 texCoord;
                 void main() {
                   texCoord = vec2(vTexCoord.x, 1.0 - vTexCoord.y);
-                  gl_Position = uMvpMatrix * vec4(vPosition,1.0);
+                  gl_Position =  uMvpMatrix * vec4(vPosition,1.0);
                 }""".trimIndent()
 
     @Language("GLSL")
