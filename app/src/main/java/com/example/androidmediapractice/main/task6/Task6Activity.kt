@@ -101,7 +101,7 @@ class Square {
             attribute vec2 vTexCoord;
             varying vec2 texCoord;
                 void main() {
-                  texCoord = vTexCoord;
+                  texCoord = vec2(vTexCoord.x, 1.0 - vTexCoord.y);
                   gl_Position = uMvpMatrix * vec4(vPosition,1.0);
                 }""".trimIndent()
 
