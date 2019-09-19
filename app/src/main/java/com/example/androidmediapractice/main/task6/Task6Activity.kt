@@ -158,7 +158,6 @@ class Square {
             0
         )
         glEnableVertexAttribArray(positionHandle)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(
@@ -167,12 +166,10 @@ class Square {
             drawListBuffer,
             GL_STATIC_DRAW
         )
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 
     fun draw(mvpMatrix: FloatArray) {
         glUseProgram(program)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
 
         glGetUniformLocation(program, "vColor").also { colorHandle ->
             glUniform4fv(colorHandle, 1, color, 0)
@@ -182,9 +179,6 @@ class Square {
             glUniformMatrix4fv(uMvpMatrixHandle, 1, false, mvpMatrix, 0)
         }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, 0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 }
