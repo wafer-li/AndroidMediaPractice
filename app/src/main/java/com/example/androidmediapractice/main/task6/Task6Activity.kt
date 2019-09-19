@@ -75,39 +75,20 @@ class Square {
     companion object {
         // number of coordinates per vertex in this array
         const val COORDS_PER_VERTEX = 3
-        var squareCoords = floatArrayOf(
-            -0.5f, 0.5f, 0.0f,      // top left
-            -0.5f, -0.5f, 0.0f,      // bottom left
-            0.5f, -0.5f, 0.0f,      // bottom right
-            0.5f, 0.5f, 0.0f       // top right
-        )
 
-        private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
     }
+
+    private val squareCoords = floatArrayOf(
+        -0.5f, 0.5f, 0.0f,      // top left
+        -0.5f, -0.5f, 0.0f,      // bottom left
+        0.5f, -0.5f, 0.0f,      // bottom right
+        0.5f, 0.5f, 0.0f       // top right
+    )
+
+    private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
 
     private val drawOrder = intArrayOf(0, 1, 2, 0, 2, 3) // order to draw vertices
 
-    // initialize vertex byte buffer for shape coordinates
-    private val vertexBuffer: FloatBuffer =
-        // (# of coordinate values * 4 bytes per float)
-        ByteBuffer.allocateDirect(squareCoords.size * 4).run {
-            order(ByteOrder.nativeOrder())
-            asFloatBuffer().apply {
-                put(squareCoords)
-                position(0)
-            }
-        }
-
-    // initialize byte buffer for the draw list
-    private val drawListBuffer: IntBuffer =
-        // (# of coordinate values * 2 bytes per short)
-        ByteBuffer.allocateDirect(drawOrder.size * 4).run {
-            order(ByteOrder.nativeOrder())
-            asIntBuffer().apply {
-                put(drawOrder)
-                position(0)
-            }
-        }
 
     @Language("GLSL")
     private val vertexShaderCode =
@@ -144,7 +125,19 @@ class Square {
         val ebo = buffers[1]
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        // initialize vertex byte buffer for shape coordinates
+        val vertexBuffer: FloatBuffer =
+            // (# of coordinate values * 4 bytes per float)
+            ByteBuffer.allocateDirect(squareCoords.size * 4).run {
+                order(ByteOrder.nativeOrder())
+                asFloatBuffer().apply {
+                    put(squareCoords)
+                    position(0)
+                }
+            }
+
         glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * 4, vertexBuffer, GL_STATIC_DRAW)
+
         val positionHandle = glGetAttribLocation(program, "vPosition")
         glVertexAttribPointer(
             positionHandle,
@@ -157,6 +150,16 @@ class Square {
         glEnableVertexAttribArray(positionHandle)
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
+        val drawListBuffer: IntBuffer =
+            // (# of coordinate values * 2 bytes per short)
+            ByteBuffer.allocateDirect(drawOrder.size * 4).run {
+                order(ByteOrder.nativeOrder())
+                asIntBuffer().apply {
+                    put(drawOrder)
+                    position(0)
+                }
+            }
+
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
             drawListBuffer.capacity() * 4,
