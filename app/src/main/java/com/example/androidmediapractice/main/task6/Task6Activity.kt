@@ -10,7 +10,7 @@ import org.intellij.lang.annotations.Language
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import java.nio.ShortBuffer
+import java.nio.IntBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -85,7 +85,7 @@ class Square {
         private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
     }
 
-    private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3) // order to draw vertices
+    private val drawOrder = intArrayOf(0, 1, 2, 0, 2, 3) // order to draw vertices
 
     // initialize vertex byte buffer for shape coordinates
     private val vertexBuffer: FloatBuffer =
@@ -99,11 +99,11 @@ class Square {
         }
 
     // initialize byte buffer for the draw list
-    private val drawListBuffer: ShortBuffer =
+    private val drawListBuffer: IntBuffer =
         // (# of coordinate values * 2 bytes per short)
-        ByteBuffer.allocateDirect(drawOrder.size * 2).run {
+        ByteBuffer.allocateDirect(drawOrder.size * 4).run {
             order(ByteOrder.nativeOrder())
-            asShortBuffer().apply {
+            asIntBuffer().apply {
                 put(drawOrder)
                 position(0)
             }
@@ -137,14 +137,11 @@ class Square {
         glDeleteShader(fragmentShader)
     }
 
-    private var vbo = 0
-    private var ebo = 0
-
     fun init() {
         val buffers = IntArray(2)
         glGenBuffers(2, buffers, 0)
-        vbo = buffers[0]
-        ebo = buffers[1]
+        val vbo = buffers[0]
+        val ebo = buffers[1]
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * 4, vertexBuffer, GL_STATIC_DRAW)
@@ -162,9 +159,8 @@ class Square {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            drawListBuffer.capacity() * 2,
-            drawListBuffer,
-            GL_STATIC_DRAW
+            drawListBuffer.capacity() * 4,
+            drawListBuffer, GL_STATIC_DRAW
         )
     }
 
@@ -179,6 +175,6 @@ class Square {
             glUniformMatrix4fv(uMvpMatrixHandle, 1, false, mvpMatrix, 0)
         }
 
-        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, 0)
+        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_INT, 0)
     }
 }
