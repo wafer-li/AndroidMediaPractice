@@ -1,10 +1,13 @@
 package com.example.androidmediapractice.main.task6
 
+import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.drawable.toBitmap
+import com.example.androidmediapractice.R
 import com.example.androidmediapractice.main.task5.loadShader
 import org.intellij.lang.annotations.Language
 import java.nio.ByteBuffer
@@ -47,7 +50,7 @@ class Task6Activity : AppCompatActivity() {
 
         override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
             square = Square()
-            square.init()
+            square.init(this@Task6Activity)
         }
     }
 
@@ -74,15 +77,15 @@ class Task6Activity : AppCompatActivity() {
 class Square {
     companion object {
         // number of coordinates per vertex in this array
-        const val COORDS_PER_VERTEX = 3
+        const val COORDS_PER_VERTEX = 5
 
     }
 
     private val squareCoords = floatArrayOf(
-        -0.5f, 0.5f, 0.0f,      // top left
-        -0.5f, -0.5f, 0.0f,      // bottom left
-        0.5f, -0.5f, 0.0f,      // bottom right
-        0.5f, 0.5f, 0.0f       // top right
+        -0.5f, 0.5f, 0.0f, 0f, 0.5f,     // top left
+        -0.5f, -0.5f, 0.0f, 0f, 0f,     // bottom left
+        0.5f, -0.5f, 0.0f, 0.5f, 0f,    // bottom right
+        0.5f, 0.5f, 0.0f, 0.5f, 0.5f   // top right
     )
 
     private val color = floatArrayOf(1.0f, 0.5f, 0.2f, 1.0f)
@@ -94,15 +97,20 @@ class Square {
     private val vertexShaderCode =
         """
     uniform mat4 uMvpMatrix;
-            attribute vec4 vPosition; 
+            attribute vec3 vPosition; 
+            attribute vec2 vTexCoord;
+            varying vec2 texCoord;
                 void main() {
-                  gl_Position = uMvpMatrix * vPosition;
+                  gl_Position = uMvpMatrix * vec4(vPosition,1.0);
+                  texCoord = vTexCoord;
                 }""".trimIndent()
 
     @Language("GLSL")
     private val fragmentShaderCode =
         """precision mediump float; 
                 uniform vec4 vColor;
+                uniform sampler2D ourTexture;
+                varying vec2 texCoord;
                 void main() {
                   gl_FragColor = vColor;
                 }""".trimIndent()
@@ -118,7 +126,9 @@ class Square {
         glDeleteShader(fragmentShader)
     }
 
-    fun init() {
+    private var texture = 0
+
+    fun init(context: Context) {
         val buffers = IntArray(2)
         glGenBuffers(2, buffers, 0)
         val vbo = buffers[0]
@@ -141,7 +151,7 @@ class Square {
         val positionHandle = glGetAttribLocation(program, "vPosition")
         glVertexAttribPointer(
             positionHandle,
-            COORDS_PER_VERTEX,
+            3,
             GL_FLOAT,
             false,
             COORDS_PER_VERTEX * 4,
@@ -149,6 +159,18 @@ class Square {
         )
         glEnableVertexAttribArray(positionHandle)
 
+        val texCoordHandle = glGetAttribLocation(program, "vTexCoord")
+        glVertexAttribPointer(
+            texCoordHandle,
+            2,
+            GL_FLOAT,
+            false,
+            COORDS_PER_VERTEX * 4,
+            3 * 4
+        )
+        glEnableVertexAttribArray(texCoordHandle)
+
+        // EBO
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         val drawListBuffer: IntBuffer =
             // (# of coordinate values * 2 bytes per short)
@@ -165,6 +187,40 @@ class Square {
             drawListBuffer.capacity() * 4,
             drawListBuffer, GL_STATIC_DRAW
         )
+
+        // Generate texture
+        val textures = IntArray(1)
+        glGenTextures(textures.size, textures, 0)
+        texture = textures[0]
+
+        // Load Image
+        val bitmap =
+            context.getDrawable(R.mipmap.ic_launcher)?.toBitmap() ?: error("Load Bitmap Error")
+        val bitmapBuffer =
+            ByteBuffer.allocateDirect(bitmap.byteCount).order(ByteOrder.nativeOrder())
+        bitmap.copyPixelsToBuffer(bitmapBuffer)
+        bitmapBuffer.position(0)
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, texture)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            bitmap.width,
+            bitmap.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            bitmapBuffer
+        )
+
+        bitmap.recycle()
     }
 
     fun draw(mvpMatrix: FloatArray) {
@@ -176,6 +232,10 @@ class Square {
 
         glGetUniformLocation(program, "uMvpMatrix").also { uMvpMatrixHandle ->
             glUniformMatrix4fv(uMvpMatrixHandle, 1, false, mvpMatrix, 0)
+        }
+
+        glGetUniformLocation(program, "ourTexture").also { ourTexTureHandle ->
+            glUniform1i(ourTexTureHandle, texture)
         }
 
         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_INT, 0)
