@@ -30,4 +30,10 @@
   <string name="task4_title">Task4</string>
   <string name="media_extractor">Media Extractor</string>
   <string name="media_muxer">Media Muxer</string>
+
+  <!-- Task 7 -->
+  <string name="task7_title">Task 7</string>
+  <string name="encode_aac">Encode To AAC</string>
+  <string name="decode_aac">Decode AAC</string>
+
 </resources>
