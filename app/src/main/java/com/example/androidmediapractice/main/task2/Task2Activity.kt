@@ -17,7 +17,6 @@ import permissions.dispatcher.RuntimePermissions
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 
@@ -38,8 +37,8 @@ class Task2Activity : AppCompatActivity() {
         ENCODING_FORMAT
     )
 
-    private val isRecording: AtomicBoolean = AtomicBoolean(false)
-    private val isPlaying: AtomicBoolean = AtomicBoolean(false)
+    private var isRecording: Boolean = false
+    private var isPlaying: Boolean = false
 
     companion object {
         private const val SAMPLE_RATE = 44100
@@ -64,28 +63,28 @@ class Task2Activity : AppCompatActivity() {
 
     private fun initView() {
         recordBtn.setOnClickListener {
-            if (isRecording.get()) {
+            if (isRecording) {
                 stopRecord()
             } else {
                 startRecordWithPermissionCheck()
             }
 
             recordBtn.text =
-                if (isRecording.get()) {
+                if (isRecording) {
                     getString(R.string.audio_stop_record)
                 } else {
                     getString(R.string.audio_start_record)
                 }
         }
         playBtn.setOnClickListener {
-            if (isPlaying.get()) {
+            if (isPlaying) {
                 stopPlay()
             } else {
                 startPlayWithPermissionCheck()
             }
 
             playBtn.text =
-                if (isPlaying.get()) {
+                if (isPlaying) {
                     getString(R.string.audio_stop_play)
                 } else {
                     getString(R.string.audio_start_play)
@@ -124,22 +123,21 @@ class Task2Activity : AppCompatActivity() {
 
     @NeedsPermission(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun startRecord() {
+        isRecording = true
         disablePlay()
         if (audioRecord == null) {
-
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG,
                 ENCODING_FORMAT, recordBufSize
             )
         }
-        isRecording.set(true)
         audioRecord?.startRecording()
         thread(start = true) { pullingRecordData() }
     }
 
     private fun stopRecord() {
+        isRecording = false
         enablePlay()
-        isRecording.set(false)
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
@@ -160,7 +158,7 @@ class Task2Activity : AppCompatActivity() {
             ).buffered()
         )
         out.use { fileOut ->
-            while (isRecording.get()) {
+            while (isRecording) {
                 val status = audioRecord?.read(audioData, 0, recordBufSize) ?: -10
                 if (status >= 0) {
                     Log.i("Write PCM File", audioData.size.toString())
@@ -173,7 +171,7 @@ class Task2Activity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun startPlay() {
         disableRecord()
-        isPlaying.set(true)
+        isPlaying = true
         if (audioTrack == null) {
             audioTrack = AudioTrack(
                 AudioAttributes.Builder().build(),
@@ -201,7 +199,7 @@ class Task2Activity : AppCompatActivity() {
                 obtainFileName()
             ).inputStream().buffered()
         ).use { input ->
-            while (isPlaying.get() && input.available() > 0) {
+            while (isPlaying && input.available() > 0) {
                 input.read(bytes)
                 ByteBuffer.wrap(bytes).asShortBuffer().get(shorts)
                 val playStatus = audioTrack?.write(shorts, 0, playBufSize) ?: -10
@@ -214,7 +212,7 @@ class Task2Activity : AppCompatActivity() {
     }
 
     private fun stopPlay() {
-        isPlaying.set(false)
+        isPlaying = false
         GlobalScope.launch(Dispatchers.Main) {
             enableRecord()
             playBtn.text = getString(R.string.audio_start_play)
@@ -289,7 +287,7 @@ class Task2Activity : AppCompatActivity() {
             saveWavBtn.isEnabled = false
             disablePlay()
             disableRecord()
-            isPlaying.set(true)
+            isPlaying = true
             if (audioTrack == null) {
                 audioTrack = AudioTrack(
                     AudioAttributes.Builder().build(),
@@ -309,7 +307,7 @@ class Task2Activity : AppCompatActivity() {
                 val shorts = ShortArray(playBufSize)
                 val bytes = ByteArray(playBufSize * 2)
                 raf.use {
-                    while (isPlaying.get()) {
+                    while (isPlaying) {
                         val readCount = it.read(bytes)
                         ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
                             .get(shorts)
@@ -322,7 +320,7 @@ class Task2Activity : AppCompatActivity() {
                         }
                     }
                 }
-                isPlaying.set(false)
+                isPlaying = false
                 GlobalScope.launch(Dispatchers.Main) {
                     playWavBtn.isEnabled = true
                     saveWavBtn.isEnabled = true
