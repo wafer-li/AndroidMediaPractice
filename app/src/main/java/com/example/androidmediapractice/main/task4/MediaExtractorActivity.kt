@@ -58,9 +58,9 @@ class MediaExtractorActivity : AppCompatActivity() {
 
     private fun initMediaExtractor() {
         mediaExtractor = MediaExtractor()
-        val file = File(getExternalFilesDir(null), "output.mp4").let {
+        val file = File(getExternalFilesDir(null), "task4/output.mp4").let {
             if (it.exists()) it
-            else File(getExternalFilesDir(null), "sample.mp4")
+            else File(getExternalFilesDir(null), "task4/sample.mp4")
         }
         mediaExtractor.setDataSource(file.absolutePath)
         val trackIndex = mediaExtractor.findTrackIndex {
