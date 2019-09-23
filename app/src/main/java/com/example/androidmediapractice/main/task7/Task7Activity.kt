@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
 @RuntimePermissions
@@ -61,7 +62,7 @@ class Task7Activity : AppCompatActivity() {
     private fun encode() = GlobalScope.launch(Dispatchers.IO) {
         encoder.start()
         val inputChannel =
-            File(getExternalFilesDir(null), "task7/sample.pcm").outputStream().channel
+            File(getExternalFilesDir(null), "task7/sample.pcm").inputStream().channel
         val outputChannel =
             File(getExternalFilesDir(null), "task7/output.aac").outputStream().channel
         writeToMediaCodec(inputChannel)
@@ -100,12 +101,36 @@ class Task7Activity : AppCompatActivity() {
                         break
                     } else if (outputBufferIndex >= 0) {
                         val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)
+                        fileChanel.write(addAdtsHeader(bufferInfo.size))
                         fileChanel.write(outputBuffer)
                         encoder.releaseOutputBuffer(outputBufferIndex, false)
                     }
                 }
             }
         }
+
+    private fun addAdtsHeader(frameLength: Int): ByteBuffer {
+        val audioObjectType = 2     // MPEG-4 Audio Object Type for AAC LC
+        val sampleFreqencyType = 4 // Sample Frequency Type for 44100Hz
+        val channelConfig = 1      // Channel Config Type for MONO
+
+        return ByteBuffer.allocate(7).run {
+            put(0xff.toByte())
+            put(0xf9.toByte())
+            val profile = (audioObjectType - 1) shl 6
+            val sampleFrequencyIndex = sampleFreqencyType shl 2
+            val channelConfigHighest = channelConfig ushr 2
+            put((profile + sampleFrequencyIndex + channelConfigHighest).toByte())
+            val channelConfigRemain = (channelConfig and 3) shl 6
+            val frameLengthHighest2 = frameLength ushr 11
+            put((channelConfigRemain + frameLengthHighest2).toByte())
+            val frameMiddleBitmask = 0b00_1111_1111_000
+            put(((frameLength and frameMiddleBitmask) ushr 3).toByte())
+            val frameLengthRemain = (frameLength and 7) shl 5
+            put((frameLengthRemain + 0x1f).toByte())
+            put(0xfc.toByte())
+        }
+    }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun prepareSamplePcm() {
