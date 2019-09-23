@@ -5,7 +5,6 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
@@ -85,7 +84,6 @@ class Task7Activity : AppCompatActivity() {
         channel.use { fileChannel: FileChannel ->
             while (!isEos) {
                 val inputBufferIndex = encoder.dequeueInputBuffer(0L)
-                Log.d("inputBufferIndex", inputBufferIndex.toString())
                 if (inputBufferIndex >= 0) {
                     val inputBuffer = encoder.getInputBuffer(inputBufferIndex)
                     val readCount = fileChannel.read(inputBuffer)
