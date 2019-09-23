@@ -17,6 +17,15 @@ import java.io.File
 class Task4Activity : AppCompatActivity() {
     private lateinit var muxHelper: MediaMuxHelper
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onRequestPermissionsResult(requestCode, grantResults)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task4)
@@ -27,8 +36,8 @@ class Task4Activity : AppCompatActivity() {
         mediaMuxerBtn.setOnClickListener {
             if (!this::muxHelper.isInitialized) {
                 muxHelper = MediaMuxHelper(
-                    File(getExternalFilesDir(null), "sample.mp4").absolutePath,
-                    File(getExternalFilesDir(null), "output.mp4").absolutePath
+                    File(getExternalFilesDir(null), "task4/sample.mp4").absolutePath,
+                    File(getExternalFilesDir(null), "task4/output.mp4").absolutePath
                 )
             }
             muxHelper.mux(this)
@@ -45,11 +54,14 @@ class Task4Activity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun prepareSampleMp4() {
         GlobalScope.launch(Dispatchers.IO) {
-            val file = File(getExternalFilesDir(null), "sample.mp4")
+            val file = File(getExternalFilesDir(null), "task4").let {
+                it.mkdir()
+                File(it, "sample.mp4")
+            }
             val isPrepared = file.exists()
             if (!isPrepared) {
                 val outputStream = file.outputStream()
-                resources.assets.open("sample.mp4").use {
+                resources.assets.open("task4/sample.mp4").use {
                     while (it.available() > 0) {
                         outputStream.write(it.read())
                     }
