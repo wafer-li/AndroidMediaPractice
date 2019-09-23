@@ -2,6 +2,7 @@ package com.example.androidmediapractice.main.task7
 
 import android.Manifest
 import android.media.MediaCodec
+import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
 import android.util.Log
@@ -61,6 +62,10 @@ class Task7Activity : AppCompatActivity() {
             MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, 44100, 1).apply {
                 setInteger(MediaFormat.KEY_BIT_RATE, 96000)
                 setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8192)
+                setInteger(
+                    MediaFormat.KEY_AAC_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AACObjectLC
+                )
             }
         encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
     }
@@ -110,7 +115,7 @@ class Task7Activity : AppCompatActivity() {
                         break
                     } else if (outputBufferIndex >= 0) {
                         val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)
-                        fileChanel.write(addAdtsHeader(bufferInfo.size))
+                        fileChanel.write(addAdtsHeader(bufferInfo.size + 7))
                         fileChanel.write(outputBuffer)
                         encoder.releaseOutputBuffer(outputBufferIndex, false)
                     }
@@ -123,24 +128,26 @@ class Task7Activity : AppCompatActivity() {
 
     private fun addAdtsHeader(frameLength: Int): ByteBuffer {
         val audioObjectType = 2     // MPEG-4 Audio Object Type for AAC LC
-        val sampleFreqencyType = 4 // Sample Frequency Type for 44100Hz
+        val sampleFrequencyType = 4 // Sample Frequency Type for 44100Hz
         val channelConfig = 1      // Channel Config Type for MONO
 
-        val packet = ByteArray(7)
-        val profile = 2 // AAC LC
-        val freqIdx = 4 // 44.1KHz
-        val chanCfg = 2 // CPE
-
-
-        // fill in ADTS data
-        packet[0] = 0xFF.toByte()
-        packet[1] = 0xF9.toByte()
-        packet[2] = ((profile - 1 shl 6) + (freqIdx shl 2) + (chanCfg ushr 2)).toByte()
-        packet[3] = ((chanCfg and 3 shl 6) + (frameLength ushr 11)).toByte()
-        packet[4] = (frameLength and 0x7FF ushr 3).toByte()
-        packet[5] = ((frameLength and 7 shl 5) + 0x1F).toByte()
-        packet[6] = 0xFC.toByte()
-        return ByteBuffer.wrap(packet)
+        return ByteBuffer.allocate(7).run {
+            put(0xff.toByte())
+            put(0xf9.toByte())
+            val profile = (audioObjectType - 1) shl 6
+            val sampleFrequencyIndex = sampleFrequencyType shl 2
+            val channelConfigHighest = channelConfig ushr 2
+            put((profile + sampleFrequencyIndex + channelConfigHighest).toByte())
+            val channelConfigRemain = (channelConfig and 3) shl 6
+            val frameLengthHighest2 = frameLength ushr 11
+            put((channelConfigRemain + frameLengthHighest2).toByte())
+            val frameMiddleBitmask = 0b00_1111_1111_000
+            put(((frameLength and frameMiddleBitmask) ushr 3).toByte())
+            val frameLengthRemain = (frameLength and 7) shl 5
+            put((frameLengthRemain + 0x1f).toByte())
+            put(0xfc.toByte())
+            position(0)
+        } as ByteBuffer
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
