@@ -147,6 +147,7 @@ class Task7Activity : AppCompatActivity() {
                         outputStream.write(it.read())
                     }
                 }
+                outputStream.close()
             }
             GlobalScope.launch(Dispatchers.Main) {
                 encodeAacBtn.isEnabled = true
