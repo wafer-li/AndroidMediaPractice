@@ -4,6 +4,8 @@ import android.Manifest
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
 import com.example.androidmediapractice.R
@@ -16,11 +18,15 @@ import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import kotlin.concurrent.thread
+
 
 @RuntimePermissions
 class Task7Activity : AppCompatActivity() {
     private lateinit var encoder: MediaCodec
     private lateinit var decoder: MediaCodec
+
+    private var isEos = false
 
     companion object {
         private const val BYTES_PER_SECOND = 44100 * 1 * 2
@@ -70,32 +76,35 @@ class Task7Activity : AppCompatActivity() {
     }
 
     @WorkerThread
-    private fun writeToMediaCodec(channel: FileChannel) = GlobalScope.launch(Dispatchers.IO) {
+    private fun writeToMediaCodec(channel: FileChannel) = thread {
         channel.use { fileChannel: FileChannel ->
-            do {
+            while (!isEos) {
                 val inputBufferIndex = encoder.dequeueInputBuffer(0L)
-                val inputBuffer = encoder.getInputBuffer(inputBufferIndex)
-                val readCount = fileChannel.read(inputBuffer)
-                val isEos = readCount < 0
-                encoder.queueInputBuffer(
-                    inputBufferIndex, 0,
-                    if (isEos) 0 else readCount,
-                    0,
-                    if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else MediaCodec.BUFFER_FLAG_KEY_FRAME
-                )
-            } while (!isEos)
+                Log.d("inputBufferIndex", inputBufferIndex.toString())
+                if (inputBufferIndex >= 0) {
+                    val inputBuffer = encoder.getInputBuffer(inputBufferIndex)
+                    val readCount = fileChannel.read(inputBuffer)
+                    isEos = readCount <= 0
+                    encoder.queueInputBuffer(
+                        inputBufferIndex, 0,
+                        if (isEos) 0 else readCount,
+                        0,
+                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else MediaCodec.BUFFER_FLAG_KEY_FRAME
+                    )
+                }
+            }
         }
     }
 
     @WorkerThread
     private fun readFromMediaCodec(channel: FileChannel) =
-        GlobalScope.launch(Dispatchers.IO) {
+        thread {
             channel.use { fileChanel ->
                 while (true) {
                     val bufferInfo = MediaCodec.BufferInfo()
                     val outputBufferIndex = encoder.dequeueOutputBuffer(bufferInfo, 0L)
 
-                    if (bufferInfo.size <= 0) {
+                    if (bufferInfo.size <= 0 && isEos) {
                         encoder.stop()
                         encoder.release()
                         break
@@ -106,6 +115,9 @@ class Task7Activity : AppCompatActivity() {
                         encoder.releaseOutputBuffer(outputBufferIndex, false)
                     }
                 }
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@Task7Activity, "Encode Finish", Toast.LENGTH_LONG).show()
+                }
             }
         }
 
@@ -114,22 +126,21 @@ class Task7Activity : AppCompatActivity() {
         val sampleFreqencyType = 4 // Sample Frequency Type for 44100Hz
         val channelConfig = 1      // Channel Config Type for MONO
 
-        return ByteBuffer.allocate(7).run {
-            put(0xff.toByte())
-            put(0xf9.toByte())
-            val profile = (audioObjectType - 1) shl 6
-            val sampleFrequencyIndex = sampleFreqencyType shl 2
-            val channelConfigHighest = channelConfig ushr 2
-            put((profile + sampleFrequencyIndex + channelConfigHighest).toByte())
-            val channelConfigRemain = (channelConfig and 3) shl 6
-            val frameLengthHighest2 = frameLength ushr 11
-            put((channelConfigRemain + frameLengthHighest2).toByte())
-            val frameMiddleBitmask = 0b00_1111_1111_000
-            put(((frameLength and frameMiddleBitmask) ushr 3).toByte())
-            val frameLengthRemain = (frameLength and 7) shl 5
-            put((frameLengthRemain + 0x1f).toByte())
-            put(0xfc.toByte())
-        }
+        val packet = ByteArray(7)
+        val profile = 2 // AAC LC
+        val freqIdx = 4 // 44.1KHz
+        val chanCfg = 2 // CPE
+
+
+        // fill in ADTS data
+        packet[0] = 0xFF.toByte()
+        packet[1] = 0xF9.toByte()
+        packet[2] = ((profile - 1 shl 6) + (freqIdx shl 2) + (chanCfg ushr 2)).toByte()
+        packet[3] = ((chanCfg and 3 shl 6) + (frameLength ushr 11)).toByte()
+        packet[4] = (frameLength and 0x7FF ushr 3).toByte()
+        packet[5] = ((frameLength and 7 shl 5) + 0x1F).toByte()
+        packet[6] = 0xFC.toByte()
+        return ByteBuffer.wrap(packet)
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
