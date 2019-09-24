@@ -18,7 +18,6 @@ import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import kotlin.concurrent.thread
 
 
 @RuntimePermissions
@@ -46,12 +45,16 @@ class Task7Activity : AppCompatActivity() {
         setContentView(R.layout.activity_task7)
         prepareSamplePcmWithPermissionCheck()
         initEncoder()
+        initDecoder()
         initOnClickListener()
     }
 
     private fun initOnClickListener() {
         encodeAacBtn.setOnClickListener {
             encode()
+        }
+        decodeAacBtn.setOnClickListener {
+            decode()
         }
     }
 
@@ -69,57 +72,82 @@ class Task7Activity : AppCompatActivity() {
         encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
     }
 
+    private fun initDecoder() {
+        decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
+        val mediaFormat =
+            MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, 44100, 1).apply {
+                setInteger(MediaFormat.KEY_BIT_RATE, 96000)
+                setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8192)
+                setInteger(
+                    MediaFormat.KEY_AAC_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AACObjectLC
+                )
+            }
+        decoder.configure(mediaFormat, null, null, 0)
+    }
+
     private fun encode() = GlobalScope.launch(Dispatchers.IO) {
         encoder.start()
         val inputChannel =
             File(getExternalFilesDir(null), "task7/sample.pcm").inputStream().channel
         val outputChannel =
             File(getExternalFilesDir(null), "task7/output.aac").outputStream().channel
-        writeToMediaCodec(inputChannel)
-        readFromMediaCodec(outputChannel)
+        writeToMediaCodec(inputChannel, encoder)
+        readFromMediaCodec(outputChannel, encoder)
+    }
+
+    private fun decode() = GlobalScope.launch(Dispatchers.IO) {
+        decoder.start()
+        val inputChannel =
+            File(getExternalFilesDir(null), "task7/output.aac").inputStream().channel
+        val outputChannel =
+            File(getExternalFilesDir(null), "task7/output_pcm.pcm").outputStream().channel
+        writeToMediaCodec(inputChannel, decoder)
+        readFromMediaCodec(outputChannel, decoder)
     }
 
     @WorkerThread
-    private fun writeToMediaCodec(channel: FileChannel) = thread {
-        channel.use { fileChannel: FileChannel ->
-            while (!isEos) {
-                val inputBufferIndex = encoder.dequeueInputBuffer(0L)
-                if (inputBufferIndex >= 0) {
-                    val inputBuffer = encoder.getInputBuffer(inputBufferIndex)
-                    val readCount = fileChannel.read(inputBuffer)
-                    isEos = readCount <= 0
-                    encoder.queueInputBuffer(
-                        inputBufferIndex, 0,
-                        if (isEos) 0 else readCount,
-                        0,
-                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else MediaCodec.BUFFER_FLAG_KEY_FRAME
-                    )
+    private fun writeToMediaCodec(channel: FileChannel, mediaCodec: MediaCodec) =
+        GlobalScope.launch(Dispatchers.IO) {
+            channel.use { fileChannel: FileChannel ->
+                while (!isEos) {
+                    val inputBufferIndex = mediaCodec.dequeueInputBuffer(0L)
+                    if (inputBufferIndex >= 0) {
+                        val inputBuffer = mediaCodec.getInputBuffer(inputBufferIndex)
+                        val readCount = fileChannel.read(inputBuffer)
+                        isEos = readCount <= 0
+                        mediaCodec.queueInputBuffer(
+                            inputBufferIndex, 0,
+                            if (isEos) 0 else readCount,
+                            0,
+                            if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else MediaCodec.BUFFER_FLAG_KEY_FRAME
+                        )
+                    }
                 }
             }
         }
-    }
 
     @WorkerThread
-    private fun readFromMediaCodec(channel: FileChannel) =
-        thread {
+    private fun readFromMediaCodec(channel: FileChannel, mediaCodec: MediaCodec) =
+        GlobalScope.launch(Dispatchers.IO) {
             channel.use { fileChanel ->
                 while (true) {
                     val bufferInfo = MediaCodec.BufferInfo()
-                    val outputBufferIndex = encoder.dequeueOutputBuffer(bufferInfo, 0L)
+                    val outputBufferIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0L)
 
                     if (bufferInfo.size <= 0 && isEos) {
-                        encoder.stop()
-                        encoder.release()
+                        mediaCodec.stop()
+                        mediaCodec.release()
                         break
                     } else if (outputBufferIndex >= 0) {
                         val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)
                         fileChanel.write(addAdtsHeader(bufferInfo.size + 7))
                         fileChanel.write(outputBuffer)
-                        encoder.releaseOutputBuffer(outputBufferIndex, false)
+                        mediaCodec.releaseOutputBuffer(outputBufferIndex, false)
                     }
                 }
                 GlobalScope.launch(Dispatchers.Main) {
-                    Toast.makeText(this@Task7Activity, "Encode Finish", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@Task7Activity, "Finish", Toast.LENGTH_LONG).show()
                 }
             }
         }
