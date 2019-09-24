@@ -17,6 +17,7 @@ import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 
@@ -114,7 +115,14 @@ class Task7Activity : AppCompatActivity() {
                     val inputBufferIndex = mediaCodec.dequeueInputBuffer(0L)
                     if (inputBufferIndex >= 0) {
                         val inputBuffer = mediaCodec.getInputBuffer(inputBufferIndex)
-                        val readCount = fileChannel.read(inputBuffer)
+                        val tempBuffer = ByteBuffer.allocate(inputBuffer?.capacity() ?: 0).order(
+                            ByteOrder.BIG_ENDIAN
+                        )
+                        val readCount = fileChannel.read(tempBuffer)
+                        val shorts = ShortArray(readCount / 2)
+                        tempBuffer.flip()
+                        tempBuffer.asShortBuffer().get(shorts)
+                        inputBuffer?.asShortBuffer()?.put(shorts)
                         isEos = readCount <= 0
                         mediaCodec.queueInputBuffer(
                             inputBufferIndex, 0,
