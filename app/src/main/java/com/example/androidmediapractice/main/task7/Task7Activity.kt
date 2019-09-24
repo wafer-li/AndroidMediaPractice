@@ -88,6 +88,7 @@ class Task7Activity : AppCompatActivity() {
     }
 
     private fun encode() = GlobalScope.launch(Dispatchers.IO) {
+        isEos = false
         encoder.start()
         val inputChannel =
             File(getExternalFilesDir(null), "task7/sample.pcm").inputStream().channel
@@ -98,9 +99,13 @@ class Task7Activity : AppCompatActivity() {
     }
 
     private fun decode() = GlobalScope.launch(Dispatchers.IO) {
+        isEos = false
         decoder.start()
-        val inputChannel =
-            File(getExternalFilesDir(null), "task7/output.aac").inputStream().channel
+        val aacFile = File(getExternalFilesDir(null), "task7/new_output.aac")
+        if (aacFile.exists().not()) {
+            removeAdtsHeader(File(getExternalFilesDir(null), "task7/output.aac"))
+        }
+        val inputChannel = aacFile.inputStream().channel
         val outputChannel =
             File(getExternalFilesDir(null), "task7/output_pcm.pcm").outputStream().channel
         writeToMediaCodec(inputChannel, decoder)
@@ -189,6 +194,57 @@ class Task7Activity : AppCompatActivity() {
             put(0xfc.toByte())
             position(0)
         } as ByteBuffer
+    }
+
+    enum class AacReaderState {
+        // INIT is the start and final state
+        INIT,
+        EXPECT_ADTS,
+        READ_ADTS,
+        READ_DATA
+    }
+
+    private fun removeAdtsHeader(file: File) {
+        val inputStream = file.inputStream()
+        val newFile = File(file.parent, "new_output.aac")
+        val outputStream = newFile.outputStream()
+        var state = AacReaderState.INIT
+        var current = 0
+        while (inputStream.available() > 0) {
+            when (state) {
+                AacReaderState.INIT -> {
+                    current = inputStream.read()
+                    check(current == 0xff)
+                    state = AacReaderState.EXPECT_ADTS
+                }
+                AacReaderState.EXPECT_ADTS -> {
+                    current = inputStream.read()
+                    check(current and 0xf0 == 0xf0)
+                    state = AacReaderState.READ_ADTS
+                }
+                AacReaderState.READ_ADTS -> {
+                    val isHasCrc = current and 0x01 == 0
+                    val readCount = (if (isHasCrc) 9 else 7) - 2
+                    val remainAdtsBytes = ByteArray(readCount)
+                    inputStream.read(remainAdtsBytes)
+                    val dataSize =
+                        (((remainAdtsBytes[1].toInt() and 0x3) shl 11) +
+                                (remainAdtsBytes[2].toInt() shl 3) +
+                                ((remainAdtsBytes[3].toInt() and 0xe0) ushr 5)) - (if (isHasCrc) 9 else 7)
+                    current = dataSize
+                    state = AacReaderState.READ_DATA
+                }
+                AacReaderState.READ_DATA -> {
+                    val bytes = ByteArray(current)
+                    inputStream.read(bytes)
+                    outputStream.write(bytes)
+                    state = AacReaderState.INIT
+                }
+            }
+        }
+        check(state == AacReaderState.INIT)
+        inputStream.close()
+        outputStream.close()
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
