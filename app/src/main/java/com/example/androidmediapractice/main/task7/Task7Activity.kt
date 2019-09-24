@@ -120,7 +120,7 @@ class Task7Activity : AppCompatActivity() {
                             inputBufferIndex, 0,
                             if (isEos) 0 else readCount,
                             0,
-                            if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else MediaCodec.BUFFER_FLAG_KEY_FRAME
+                            0
                         )
                     }
                 }
@@ -140,7 +140,10 @@ class Task7Activity : AppCompatActivity() {
                         mediaCodec.release()
                         break
                     } else if (outputBufferIndex >= 0) {
-                        val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)
+                        val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)?.apply {
+                            position(bufferInfo.offset)
+                            limit(bufferInfo.offset + bufferInfo.size)
+                        }
                         fileChanel.write(addAdtsHeader(bufferInfo.size + 7))
                         fileChanel.write(outputBuffer)
                         mediaCodec.releaseOutputBuffer(outputBufferIndex, false)
