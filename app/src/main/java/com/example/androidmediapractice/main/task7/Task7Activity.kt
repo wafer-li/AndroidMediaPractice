@@ -93,7 +93,7 @@ class Task7Activity : AppCompatActivity() {
             File(getExternalFilesDir(null), "task7/sample.pcm").inputStream().channel
         val outputChannel =
             File(getExternalFilesDir(null), "task7/output.aac").outputStream().channel
-        writeToMediaCodec(inputChannel, encoder)
+        writeToMediaCodec(inputChannel, encoder, true)
         readFromMediaCodec(outputChannel, encoder)
     }
 
@@ -108,7 +108,11 @@ class Task7Activity : AppCompatActivity() {
     }
 
     @WorkerThread
-    private fun writeToMediaCodec(channel: FileChannel, mediaCodec: MediaCodec) =
+    private fun writeToMediaCodec(
+        channel: FileChannel,
+        mediaCodec: MediaCodec,
+        isFlipEndian: Boolean = false
+    ) =
         GlobalScope.launch(Dispatchers.IO) {
             channel.use { fileChannel: FileChannel ->
                 while (!isEos) {
@@ -118,11 +122,14 @@ class Task7Activity : AppCompatActivity() {
                         val tempBuffer = ByteBuffer.allocate(inputBuffer?.capacity() ?: 0).order(
                             ByteOrder.BIG_ENDIAN
                         )
-                        val readCount = fileChannel.read(tempBuffer)
-                        val shorts = ShortArray(readCount / 2)
-                        tempBuffer.flip()
-                        tempBuffer.asShortBuffer().get(shorts)
-                        inputBuffer?.asShortBuffer()?.put(shorts)
+                        val readCount =
+                            fileChannel.read(if (isFlipEndian) tempBuffer else inputBuffer)
+                        if (isFlipEndian) {
+                            val shorts = ShortArray(readCount / 2)
+                            tempBuffer.flip()
+                            tempBuffer.asShortBuffer().get(shorts)
+                            inputBuffer?.asShortBuffer()?.put(shorts)
+                        }
                         isEos = readCount <= 0
                         mediaCodec.queueInputBuffer(
                             inputBufferIndex, 0,
