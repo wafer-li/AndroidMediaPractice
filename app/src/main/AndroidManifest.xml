@@ -43,6 +43,7 @@
       android:name=".main.task5.Task5Activity"
       android:screenOrientation="portrait" />
     <activity android:name=".main.task6.Task6Activity" />
+    <activity android:name=".main.task7.Task7Activity" />
   </application>
 
   <dist:module dist:instant="true" />
