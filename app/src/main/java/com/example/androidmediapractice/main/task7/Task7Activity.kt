@@ -84,6 +84,30 @@ class Task7Activity : AppCompatActivity() {
                     MediaCodecInfo.CodecProfileLevel.AACObjectLC
                 )
                 setInteger(MediaFormat.KEY_IS_ADTS, 1)
+                fun createCodecSpecificData(
+                    audioObjectType: Int,
+                    sampleFrequencyIndex: Int,
+                    channelConfig: Int
+                ): ByteBuffer {
+                    // AAC CSD_0 Format
+                    /*
+                     * oooo offf fccc c000
+                     * o - audio object type
+                     * f - sample frequency
+                     * c - channel configuration
+                     */
+                    val csd0 = ByteArray(2)
+                    csd0[0] = ((audioObjectType shl 3) or (sampleFrequencyIndex ushr 1)).toByte()
+                    csd0[1] =
+                        (((sampleFrequencyIndex shl 3) and 0x80) or (channelConfig shl 3)).toByte()
+                    return ByteBuffer.wrap(csd0)
+                }
+                setByteBuffer(
+                    "csd-0", createCodecSpecificData(
+                        MediaCodecInfo.CodecProfileLevel.AACObjectLC,
+                        4, 1
+                    )
+                )
             }
         decoder.configure(mediaFormat, null, null, 0)
     }
