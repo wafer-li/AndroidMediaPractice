@@ -36,4 +36,9 @@
   <string name="encode_aac">Encode To AAC</string>
   <string name="decode_aac">Decode AAC</string>
 
+  <!-- Task 8 -->
+  <string name="task8_title">Task 8</string>
+  <string name="encode_h264">Encode to H.264</string>
+  <string name="decode_h264">Decode H.264</string>
+
 </resources>

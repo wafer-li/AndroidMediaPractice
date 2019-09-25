@@ -22,6 +22,9 @@
     <item>
       学习 MediaCodec API，完成音频 AAC 硬编、硬解
     </item>
+    <item>
+      学习 MediaCodec API，完成视频 H.264 的硬编、硬解
+    </item>
   </string-array>
 
   <string-array name="task_activities">
@@ -32,5 +35,6 @@
     <item>task5.Task5Activity</item>
     <item>task6.Task6Activity</item>
     <item>task7.Task7Activity</item>
+    <item>task8.Task8Activity</item>
   </string-array>
 </resources>
