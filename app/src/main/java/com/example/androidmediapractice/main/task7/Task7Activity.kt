@@ -208,7 +208,10 @@ class Task7Activity : AppCompatActivity() {
                         mediaCodec.release()
                         break
                     } else if (outputBufferIndex >= 0) {
-                        val outputBuffer = mediaCodec.getOutputBuffer(outputBufferIndex)
+                        val outputBuffer = mediaCodec.getOutputBuffer(outputBufferIndex)?.apply {
+                            position(bufferInfo.offset)
+                            limit(bufferInfo.size + bufferInfo.offset)
+                        }
                         if (isNeedAdts) {
                             fileChanel.write(addAdtsHeader(bufferInfo.size + 7))
                         }
