@@ -61,7 +61,10 @@ android {
     signingConfigs {
         create("default") {
             val properties = Properties().apply {
-                load(project.rootProject.file("local.properties").inputStream())
+                val f = project.rootProject.file("local.properties")
+                if (f.exists()) {
+                    load(f.inputStream())
+                }
             }
 
             storeFile = file("wafer-keystore.keystore")
