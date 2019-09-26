@@ -6,9 +6,9 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:3.4.2")
+        classpath("com.android.tools.build:gradle:3.5.0")
         classpath(kotlin("gradle-plugin", Versions.org_jetbrains_kotlin))
-        classpath ("androidx.navigation:navigation-safe-args-gradle-plugin:2.1.0-beta02")
+        classpath ("androidx.navigation:navigation-safe-args-gradle-plugin:2.2.0-alpha03")
         classpath ("org.jetbrains.kotlin:kotlin-serialization:${Versions.org_jetbrains_kotlin}")
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -16,7 +16,7 @@ buildscript {
 }
 
 plugins {
-    id("de.fayard.buildSrcVersions") version "0.3.2"
+    buildSrcVersions
 }
 
 allprojects {
