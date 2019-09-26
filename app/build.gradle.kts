@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import org.jetbrains.kotlin.konan.properties.hasProperty
+import java.util.*
 
 plugins {
     id("com.android.application")
@@ -28,6 +30,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
     sourceSets {
         this["main"].jni.srcDirs("src/main/cpp", "src/main/jni")
     }
@@ -39,22 +46,55 @@ android {
         }
     }
 
-    dataBinding {
-        isEnabled = true
-    }
 
     lintOptions {
         disable("GoogleAppIndexingWarning")
         disable("AllowBackup")
     }
 
+    /**
+     * KEY_STORE_PASS=cs0321cfnmjk
+    KEY_ALIAS=wafer
+    KEY_PASS=cs0321cfnmjk
+     */
+
+    signingConfigs {
+        create("default") {
+            val properties = Properties().apply {
+                val f = project.rootProject.file("local.properties")
+                if (f.exists()) {
+                    load(f.inputStream())
+                }
+            }
+
+            storeFile = file("wafer-keystore.keystore")
+            storePassword =
+                if (properties.hasProperty("KEY_STORE_PASS")) properties.getProperty("KEY_STORE_PASS") else System.getenv(
+                    "KEY_STORE_PASS"
+                )
+            keyAlias =
+                if (properties.hasProperty("KEY_ALIAS")) properties.getProperty("KEY_ALIAS") else System.getenv(
+                    "KEY_ALIAS"
+                )
+            keyPassword =
+                if (properties.hasProperty("KEY_PASS")) properties.getProperty("KEY_PASS") else System.getenv(
+                    "KEY_PASS"
+                )
+        }
+    }
+
     buildTypes {
-        getByName("release") {
+        getByName("debug") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("default")
+        }
+        getByName("release") {
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("default")
         }
     }
 }
@@ -75,7 +115,6 @@ dependencies {
     implementation(Libs.kotlinx_coroutines_core)
     implementation(Libs.kotlinx_coroutines_android)
     implementation(Libs.kotlinx_serialization_runtime)
-
 
 
     /**

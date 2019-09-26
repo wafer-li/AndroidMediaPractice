@@ -1,0 +1,44 @@
+language: android
+dist: trusty
+sudo: false
+branches:
+  only:
+    - master
+jdk:
+  - oraclejdk8
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-29-0-2
+    - android-29
+    - extra-google-m2repository
+    - extra-android-m2repository
+before_install:
+  - openssl aes-256-cbc -K $encrypted_8980437f7c5c_key -iv $encrypted_8980437f7c5c_iv
+    -in wafer-keystore.keystore.enc -out app/wafer-keystore.keystore -d
+install:
+  - echo y | sdkmanager "ndk-bundle"
+  - echo y | sdkmanager --channel=3 --channel=1 "cmake;3.10.2.4988404"
+  - echo y | sdkmanager "lldb;3.1"
+script:
+  - "./gradlew assembleRelease"
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - "$HOME/.gradle/caches/"
+    - "$HOME/.gradle/wrapper/"
+    - "$HOME/.android/build-cache"
+deploy:
+  provider: releases
+  overwrite: true
+  api_key:
+    secure: teMSx8dHtoXrA97iuIsKya0snACnrEbfesMCnKPooRIXNLSjG14BIck4a6h0YCPMswU+e9RoP1hRa3Ye/6xHvaE9dzNL0dEpce1zDCAua+YeodhVNaL05nBtn17/yLa+vJ3R5TumVU7IY4PvYZVYtH1KH8jfz03iSciG/VAYQriOAv4jck4YEKHWa7WI3sfGSqldF1PCuAr2RSElL17Jm/LaLsU3lt2dmrvfKQJTfYhigsIOlxfoHH8m7yITfKOmGuv2HPdvJCvivHsRGAl9jaq5kbF5K1etuuliBwlf9vtM0nhxgIpFQhyjO6j5hgDuFk+2tp9HtW80RXTGb/AxtzNBvRe6NofX+D8Z+LkKoKk/Y1unMjpA/2354dW73hmURYHsEioPIcmdgqFNLvZqX7L9psclCKBfRgY4HRPWzyxo/tZ1LnttFrRagZIP1jN724EJnZCvcQ+k6urMTLO3mZQgz36/4PntVQX52NHyXVv7VPqJZxgmv5jibf5cC/dFxJT98/MwPx7utndtUmrobuu2nViuT/uxhx8IhUHy3a0G9kyZu9z4Qau/1U4CgtBjl5PCAfjI6Cyypi2qYNMjvpTtJPhQSPEWbcOenxVbH5LzX7ZI/4+BGCZoEpyX8jrXpyI+0vL1QZfzw/FEyx0CPE9dIqAl9HqtofCyeoNa6wg=
+  file: app/build/outputs/apk/release/app-release.apk
+  skip_cleanup: true
+  on:
+    repo: wafer-li/AndroidMediaPractice
+    tags: true
+    branch: master
