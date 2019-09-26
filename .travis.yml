@@ -1,6 +1,10 @@
 language: android
 dist: trusty
 sudo: false
+branches:
+  only:
+    - master
+if: tag IS present
 jdk:
   - oraclejdk8
 android:
@@ -34,7 +38,7 @@ deploy:
     secure: teMSx8dHtoXrA97iuIsKya0snACnrEbfesMCnKPooRIXNLSjG14BIck4a6h0YCPMswU+e9RoP1hRa3Ye/6xHvaE9dzNL0dEpce1zDCAua+YeodhVNaL05nBtn17/yLa+vJ3R5TumVU7IY4PvYZVYtH1KH8jfz03iSciG/VAYQriOAv4jck4YEKHWa7WI3sfGSqldF1PCuAr2RSElL17Jm/LaLsU3lt2dmrvfKQJTfYhigsIOlxfoHH8m7yITfKOmGuv2HPdvJCvivHsRGAl9jaq5kbF5K1etuuliBwlf9vtM0nhxgIpFQhyjO6j5hgDuFk+2tp9HtW80RXTGb/AxtzNBvRe6NofX+D8Z+LkKoKk/Y1unMjpA/2354dW73hmURYHsEioPIcmdgqFNLvZqX7L9psclCKBfRgY4HRPWzyxo/tZ1LnttFrRagZIP1jN724EJnZCvcQ+k6urMTLO3mZQgz36/4PntVQX52NHyXVv7VPqJZxgmv5jibf5cC/dFxJT98/MwPx7utndtUmrobuu2nViuT/uxhx8IhUHy3a0G9kyZu9z4Qau/1U4CgtBjl5PCAfjI6Cyypi2qYNMjvpTtJPhQSPEWbcOenxVbH5LzX7ZI/4+BGCZoEpyX8jrXpyI+0vL1QZfzw/FEyx0CPE9dIqAl9HqtofCyeoNa6wg=
   file: app/build/outputs/apk/release/app-release.apk
   skip_cleanup: true
-  draft: true
   on:
     repo: wafer-li/AndroidMediaPractice
-    branch: travis-ci
+    tags: true
+    branch: master
