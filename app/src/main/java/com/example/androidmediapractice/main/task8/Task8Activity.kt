@@ -44,13 +44,16 @@ class Task8Activity : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun initEncoder() {
         encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         val mediaFormat =
             MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 1920, 1080).apply {
                 setInteger(
                     MediaFormat.KEY_COLOR_FORMAT,
-                    MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+                    // Our YUV file is stored as YUV420Planar
+                    // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible is for decoder
+                    MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
                 )
                 setInteger(MediaFormat.KEY_BIT_RATE, 1920 * 1080 * 5)
                 setInteger(MediaFormat.KEY_FRAME_RATE, 30)
