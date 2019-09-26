@@ -35,3 +35,7 @@
 - [ ] 将 librtmp 库移植到 Android 平台，结合上面积累的经验，完成 Android RTMP 推流功能
 
 - [ ] 上面积累的经验，做一款短视频 APP，完成如：断点拍摄、添加水印、本地转码、视频剪辑、视频拼接、MV 特效等功能
+
+# 下载
+
+![](https://api.qrserver.com/v1/create-qr-code/?data=https://github.com/wafer-li/AndroidMediaPractice/releases/latest/download/app-release.apk&size=220x220&margin=0)
