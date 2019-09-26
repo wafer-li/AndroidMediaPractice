@@ -1,0 +1,21 @@
+language: android
+dist: trusty
+sudo: false
+jdk:
+  - oraclejdk8
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-29-0-2
+    - android-29
+    - extra-google-m2repository
+    - extra-android-m2repository
+before_install:
+  - openssl aes-256-cbc -K $encrypted_8980437f7c5c_key -iv $encrypted_8980437f7c5c_iv -in wafer-keystore.keystore.enc -out app/wafer-keystore.keystore -d
+install:
+  - echo y | sdkmanager "ndk-bundle"
+  - echo y | sdkmanager --channel=3 --channel=1 "cmake;3.10.2.4988404"
+  - echo y | sdkmanager "lldb;3.1"
+script:
+  - ./gradlew assembleRelease
