@@ -38,6 +38,7 @@
 
   <!-- Task 8 -->
   <string name="task8_title">Task 8</string>
+  <string name="task8_notice">Must Run Task3 Capture Activity First to generate YUV file</string>
   <string name="encode_h264">Encode to H.264</string>
   <string name="decode_h264">Decode H.264</string>
 

@@ -11,6 +11,18 @@
     android:layout_height="wrap_content"
     app:title="@string/task8_title" />
 
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp"
+    android:gravity="center"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:text="@string/task8_notice"
+    android:textColor="#333"
+    android:textSize="20sp" />
+
   <Button
     android:id="@+id/encodeH264Btn"
     android:layout_width="match_parent"
