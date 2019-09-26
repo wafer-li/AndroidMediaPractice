@@ -30,6 +30,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
     sourceSets {
         this["main"].jni.srcDirs("src/main/cpp", "src/main/jni")
     }
@@ -41,9 +46,6 @@ android {
         }
     }
 
-    dataBinding {
-        isEnabled = true
-    }
 
     lintOptions {
         disable("GoogleAppIndexingWarning")
