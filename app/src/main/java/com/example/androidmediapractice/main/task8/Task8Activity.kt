@@ -21,6 +21,8 @@ class Task8Activity : AppCompatActivity() {
     private lateinit var encoder: MediaCodec
     private lateinit var decoder: MediaCodec
 
+    private var outputFormat = MediaFormat()
+
     private var isEos = false
 
     override fun onRequestPermissionsResult(
@@ -35,11 +37,12 @@ class Task8Activity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task8)
-        initEncoder()
         encodeH264Btn.setOnClickListener {
+            initEncoder()
             encode()
         }
         decodeH264Btn.setOnClickListener {
+            initDecoder()
             decode()
         }
     }
@@ -57,10 +60,19 @@ class Task8Activity : AppCompatActivity() {
                 )
                 setInteger(MediaFormat.KEY_BIT_RATE, 1920 * 1080 * 5)
                 setInteger(MediaFormat.KEY_FRAME_RATE, 30)
+                setInteger(
+                    MediaFormat.KEY_BITRATE_MODE,
+                    MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
+                )
                 setInteger(MediaFormat.KEY_CAPTURE_RATE, 30)
                 setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
             }
         encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+    }
+
+    private fun initDecoder() {
+        decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        decoder.configure(outputFormat, null, null, 0)
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -101,6 +113,8 @@ class Task8Activity : AppCompatActivity() {
                     encoder.stop()
                     encoder.release()
                     break
+                } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    outputFormat = encoder.outputFormat
                 } else if (outputBufferIndex >= 0) {
                     val outputBuffer = encoder.getOutputBuffer(outputBufferIndex)?.apply {
                         position(bufferInfo.offset)
