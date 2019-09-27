@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
 
 @RuntimePermissions
 class Task8Activity : AppCompatActivity() {
@@ -72,6 +74,16 @@ class Task8Activity : AppCompatActivity() {
 
     private fun initDecoder() {
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        val mediaFormat =
+            MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 1920, 1080).apply {
+                setInteger(MediaFormat.KEY_WIDTH, 1920)
+                setInteger(MediaFormat.KEY_HEIGHT, 1080)
+                setInteger(MediaFormat.KEY_FRAME_RATE, 30)
+                val csd0 = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 40, -38, 1, -32, 8, -105, -107)
+                val csd1 = byteArrayOf(0, 0, 0, 1, 104, -50, 60, -128)
+                setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+                setByteBuffer("csd-1", ByteBuffer.wrap(csd1))
+            }
         decoder.configure(outputFormat, null, null, 0)
     }
 
@@ -143,13 +155,72 @@ class Task8Activity : AppCompatActivity() {
         }
     }
 
+    private fun obtainNALU(rf: RandomAccessFile, maxSize: Int): ByteArray {
+        val bytes = ByteArray(maxSize + 5)
+        var currentPosition = -1
+        rf.read(bytes, 0, 4)
+        if (isStartCode4(bytes, 0)) {
+            currentPosition = 4
+        } else {
+            rf.seek(rf.filePointer - 4)
+            rf.read(bytes, 0, 3)
+            if (isStartCode3(bytes, 0)) {
+                currentPosition = 3
+            }
+        }
+
+        var isFindNextStartCode = false
+        var nextStartPosition = currentPosition
+        while (!isFindNextStartCode) {
+            val hex = rf.read()
+            if (hex == -1) {
+                nextStartPosition = currentPosition
+                break
+            } else {
+                bytes[currentPosition++] = hex.toByte()
+            }
+            if (isStartCode4(bytes, currentPosition - 4)) {
+                nextStartPosition = currentPosition - 4
+                rf.seek(rf.filePointer - 4)
+                isFindNextStartCode = true
+            } else if (isStartCode3(bytes, currentPosition - 3)) {
+                nextStartPosition = currentPosition - 3
+                rf.seek(rf.filePointer - 3)
+                isFindNextStartCode = true
+            }
+        }
+        return nextStartPosition.run {
+            if (nextStartPosition <= 0)
+                ByteArray(0)
+            else bytes.copyOfRange(
+                0,
+                nextStartPosition
+            )
+        }
+    }
+
+    private fun isStartCode4(bytes: ByteArray, offset: Int): Boolean {
+        return bytes[offset + 0].toInt() == 0 &&
+                bytes[offset + 1].toInt() == 0 &&
+                bytes[offset + 2].toInt() == 0 &&
+                bytes[offset + 3].toInt() == 1
+    }
+
+    private fun isStartCode3(bytes: ByteArray, offset: Int): Boolean {
+        return bytes[offset + 0].toInt() == 0 &&
+                bytes[offset + 1].toInt() == 0 &&
+                bytes[offset + 2].toInt() == 1
+    }
+
     private fun writeToDecoder(file: File) = GlobalScope.launch(Dispatchers.IO) {
-        file.inputStream().channel.use {
+        RandomAccessFile(file, "r").use {
             while (!isEos) {
                 val inputBufferIndex = decoder.dequeueInputBuffer(0L)
                 if (inputBufferIndex >= 0) {
                     val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-                    val readCount = it.read(inputBuffer)
+                    val naluBytes = obtainNALU(it, inputBuffer?.capacity() ?: 0)
+                    val readCount = naluBytes.size
+                    inputBuffer?.put(naluBytes)
                     isEos = readCount <= 0
                     decoder.queueInputBuffer(
                         inputBufferIndex, 0,
@@ -177,6 +248,9 @@ class Task8Activity : AppCompatActivity() {
                     it.write(outputBuffer)
                 }
             }
+        }
+        GlobalScope.launch(Dispatchers.Main) {
+            Toast.makeText(this@Task8Activity, "Finish", Toast.LENGTH_SHORT).show()
         }
     }
 
