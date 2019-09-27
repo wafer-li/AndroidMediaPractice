@@ -158,7 +158,7 @@ class Task8Activity : AppCompatActivity() {
     private fun obtainNALU(rf: RandomAccessFile, maxSize: Int): ByteArray {
         val bytes = ByteArray(maxSize + 5)
         var currentPosition = -1
-        rf.read(bytes, 0, 4)
+        val readCount = rf.read(bytes, 0, 4)
         if (isStartCode4(bytes, 0)) {
             currentPosition = 4
         } else {
@@ -169,7 +169,7 @@ class Task8Activity : AppCompatActivity() {
             }
         }
 
-        var isFindNextStartCode = false
+        var isFindNextStartCode = readCount <= 0
         var nextStartPosition = currentPosition
         while (!isFindNextStartCode) {
             val hex = rf.read()
@@ -240,12 +240,14 @@ class Task8Activity : AppCompatActivity() {
                 if (bufferInfo.size <= 0 && isEos) {
                     decoder.stop()
                     decoder.release()
+                    break
                 } else if (outputBufferIndex >= 0) {
                     val outputBuffer = decoder.getOutputBuffer(outputBufferIndex)?.apply {
                         position(bufferInfo.offset)
                         limit(bufferInfo.offset + bufferInfo.size)
                     }
                     it.write(outputBuffer)
+                    decoder.releaseOutputBuffer(outputBufferIndex, false)
                 }
             }
         }
