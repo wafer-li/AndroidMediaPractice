@@ -78,6 +78,7 @@ class Task8Activity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun encode() {
         GlobalScope.launch(Dispatchers.IO) {
+            isEos = false
             encoder.start()
             val yuvFile = obtainYuvFile()
             val mp4File = obtainH264File()
@@ -133,11 +134,55 @@ class Task8Activity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     internal fun decode() {
         GlobalScope.launch(Dispatchers.IO) {
+            isEos = false
+            decoder.start()
+            val outputFile = obtainOutPutYuvFile()
+            val inputH264File = obtainH264File()
+            writeToDecoder(inputH264File)
+            readFromDecoder(outputFile)
+        }
+    }
 
+    private fun writeToDecoder(file: File) = GlobalScope.launch(Dispatchers.IO) {
+        file.inputStream().channel.use {
+            while (!isEos) {
+                val inputBufferIndex = decoder.dequeueInputBuffer(0L)
+                if (inputBufferIndex >= 0) {
+                    val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
+                    val readCount = it.read(inputBuffer)
+                    isEos = readCount <= 0
+                    decoder.queueInputBuffer(
+                        inputBufferIndex, 0,
+                        if (isEos) 0 else readCount, 0,
+                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
+                    )
+                }
+            }
+        }
+    }
+
+    private fun readFromDecoder(outputFile: File) = GlobalScope.launch(Dispatchers.IO) {
+        outputFile.outputStream().channel.use {
+            while (true) {
+                val bufferInfo = MediaCodec.BufferInfo()
+                val outputBufferIndex = decoder.dequeueOutputBuffer(bufferInfo, 0L)
+                if (bufferInfo.size <= 0 && isEos) {
+                    decoder.stop()
+                    decoder.release()
+                } else if (outputBufferIndex >= 0) {
+                    val outputBuffer = decoder.getOutputBuffer(outputBufferIndex)?.apply {
+                        position(bufferInfo.offset)
+                        limit(bufferInfo.offset + bufferInfo.size)
+                    }
+                    it.write(outputBuffer)
+                }
+            }
         }
     }
 
     private fun obtainYuvFile() = File(getExternalFilesDir(null), "yuv420_888.yuv")
 
     private fun obtainH264File() = File(getExternalFilesDir(null), "output.h264")
+
+    private fun obtainOutPutYuvFile() = File(getExternalFilesDir(null), "output.yuv")
 }
