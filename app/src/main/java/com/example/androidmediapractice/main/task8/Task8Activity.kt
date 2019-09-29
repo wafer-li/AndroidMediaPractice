@@ -28,7 +28,6 @@ class Task8Activity : AppCompatActivity() {
     private var outputFormat = MediaFormat()
 
     private var isEos = false
-    private var frameIndex = 0
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
