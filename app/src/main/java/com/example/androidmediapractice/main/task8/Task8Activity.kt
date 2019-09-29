@@ -155,6 +155,50 @@ class Task8Activity : AppCompatActivity() {
         }
     }
 
+    private fun writeToDecoder(file: File) = GlobalScope.launch(Dispatchers.IO) {
+        RandomAccessFile(file, "r").use {
+            while (!isEos) {
+                val inputBufferIndex = decoder.dequeueInputBuffer(0L)
+                if (inputBufferIndex >= 0) {
+                    val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
+                    val naluBytes = obtainNALU(it, inputBuffer?.capacity() ?: 0)
+                    val readCount = naluBytes.size
+                    inputBuffer?.put(naluBytes)
+                    isEos = readCount <= 0
+                    decoder.queueInputBuffer(
+                        inputBufferIndex, 0,
+                        if (isEos) 0 else readCount, 0,
+                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
+                    )
+                }
+            }
+        }
+    }
+
+    private fun readFromDecoder(outputFile: File) = GlobalScope.launch(Dispatchers.IO) {
+        outputFile.outputStream().channel.use {
+            while (true) {
+                val bufferInfo = MediaCodec.BufferInfo()
+                val outputBufferIndex = decoder.dequeueOutputBuffer(bufferInfo, 0L)
+                if (bufferInfo.size <= 0 && bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
+                    decoder.stop()
+                    decoder.release()
+                    break
+                } else if (outputBufferIndex >= 0) {
+                    val outputBuffer = decoder.getOutputBuffer(outputBufferIndex)?.apply {
+                        position(bufferInfo.offset)
+                        limit(bufferInfo.offset + bufferInfo.size)
+                    }
+                    it.write(outputBuffer)
+                    decoder.releaseOutputBuffer(outputBufferIndex, false)
+                }
+            }
+        }
+        GlobalScope.launch(Dispatchers.Main) {
+            Toast.makeText(this@Task8Activity, "Finish", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun obtainNALU(rf: RandomAccessFile, maxSize: Int): ByteArray {
         val bytes = ByteArray(maxSize + 5)
         var currentPosition = -1
@@ -212,49 +256,7 @@ class Task8Activity : AppCompatActivity() {
                 bytes[offset + 2].toInt() == 1
     }
 
-    private fun writeToDecoder(file: File) = GlobalScope.launch(Dispatchers.IO) {
-        RandomAccessFile(file, "r").use {
-            while (!isEos) {
-                val inputBufferIndex = decoder.dequeueInputBuffer(0L)
-                if (inputBufferIndex >= 0) {
-                    val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-                    val naluBytes = obtainNALU(it, inputBuffer?.capacity() ?: 0)
-                    val readCount = naluBytes.size
-                    inputBuffer?.put(naluBytes)
-                    isEos = readCount <= 0
-                    decoder.queueInputBuffer(
-                        inputBufferIndex, 0,
-                        if (isEos) 0 else readCount, 0,
-                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
-                    )
-                }
-            }
-        }
-    }
 
-    private fun readFromDecoder(outputFile: File) = GlobalScope.launch(Dispatchers.IO) {
-        outputFile.outputStream().channel.use {
-            while (true) {
-                val bufferInfo = MediaCodec.BufferInfo()
-                val outputBufferIndex = decoder.dequeueOutputBuffer(bufferInfo, 0L)
-                if (bufferInfo.size <= 0 && isEos) {
-                    decoder.stop()
-                    decoder.release()
-                    break
-                } else if (outputBufferIndex >= 0) {
-                    val outputBuffer = decoder.getOutputBuffer(outputBufferIndex)?.apply {
-                        position(bufferInfo.offset)
-                        limit(bufferInfo.offset + bufferInfo.size)
-                    }
-                    it.write(outputBuffer)
-                    decoder.releaseOutputBuffer(outputBufferIndex, false)
-                }
-            }
-        }
-        GlobalScope.launch(Dispatchers.Main) {
-            Toast.makeText(this@Task8Activity, "Finish", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private fun obtainYuvFile() = File(getExternalFilesDir(null), "yuv420_888.yuv")
 
