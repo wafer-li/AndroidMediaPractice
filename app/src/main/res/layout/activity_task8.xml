@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+  <androidx.appcompat.widget.Toolbar
+    style="@style/AppTheme.Toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:title="@string/task8_title" />
+
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp"
+    android:gravity="center"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:text="@string/task8_notice"
+    android:textColor="#333"
+    android:textSize="20sp" />
+
+  <Button
+    android:id="@+id/encodeH264Btn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/encode_h264" />
+
+  <Button
+    android:id="@+id/decodeH264Btn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/decode_h264" />
+
+</LinearLayout>

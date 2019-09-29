@@ -8,8 +8,8 @@
   <uses-permission android:name="android.permission.CAMERA" />
 
   <uses-feature
-      android:glEsVersion="0x00020000"
-      android:required="true" />
+    android:glEsVersion="0x00020000"
+    android:required="true" />
 
   <supports-gl-texture android:name="GL_OES_compressed_ETC1_RGB8_texture" />
   <supports-gl-texture android:name="GL_OES_compressed_paletted_texture" />
@@ -38,12 +38,17 @@
     <activity android:name=".main.task3.PreviewSurfaceActivity" />
     <activity android:name=".main.task3.PreviewTextureActivity" />
     <activity android:name=".main.task4.Task4Activity" />
-      <activity android:name=".main.task4.MediaExtractorActivity" />
+    <activity android:name=".main.task4.MediaExtractorActivity" />
     <activity
       android:name=".main.task5.Task5Activity"
       android:screenOrientation="portrait" />
     <activity android:name=".main.task6.Task6Activity" />
-    <activity android:name=".main.task7.Task7Activity" />
+    <activity
+      android:name=".main.task7.Task7Activity"
+      android:launchMode="singleTask" />
+    <activity
+      android:name=".main.task8.Task8Activity"
+      android:launchMode="singleTask" />
   </application>
 
   <dist:module dist:instant="true" />
