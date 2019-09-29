@@ -16,7 +16,7 @@ import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.io.RandomAccessFile
-import java.nio.ByteBuffer
+import kotlin.experimental.and
 
 @RuntimePermissions
 class Task8Activity : AppCompatActivity() {
@@ -79,12 +79,8 @@ class Task8Activity : AppCompatActivity() {
                 setInteger(MediaFormat.KEY_WIDTH, 1920)
                 setInteger(MediaFormat.KEY_HEIGHT, 1080)
                 setInteger(MediaFormat.KEY_FRAME_RATE, 30)
-                val csd0 = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 40, -38, 1, -32, 8, -105, -107)
-                val csd1 = byteArrayOf(0, 0, 0, 1, 104, -50, 60, -128)
-                setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
-                setByteBuffer("csd-1", ByteBuffer.wrap(csd1))
             }
-        decoder.configure(outputFormat, null, null, 0)
+        decoder.configure(mediaFormat, null, null, 0)
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -160,15 +156,19 @@ class Task8Activity : AppCompatActivity() {
             while (!isEos) {
                 val inputBufferIndex = decoder.dequeueInputBuffer(0L)
                 if (inputBufferIndex >= 0) {
-                    val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-                    val naluBytes = obtainNALU(it, inputBuffer?.capacity() ?: 0)
+                    val inputBuffer =
+                        decoder.getInputBuffer(inputBufferIndex) ?: error("InputBufferIndex Error")
+                    val naluBytes = obtainNALU(it, inputBuffer.capacity())
                     val readCount = naluBytes.size
-                    inputBuffer?.put(naluBytes)
+                    inputBuffer.put(naluBytes)
                     isEos = readCount <= 0
                     decoder.queueInputBuffer(
                         inputBufferIndex, 0,
                         if (isEos) 0 else readCount, 0,
-                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
+                        if (isEos) MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                        else if (isSpsNALU(naluBytes) || isPpsNALU(naluBytes)) MediaCodec.BUFFER_FLAG_CODEC_CONFIG
+                        else if (isIdrNALU(naluBytes)) MediaCodec.BUFFER_FLAG_KEY_FRAME
+                        else 0
                     )
                 }
             }
@@ -197,6 +197,21 @@ class Task8Activity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.Main) {
             Toast.makeText(this@Task8Activity, "Finish", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun isSpsNALU(bytes: ByteArray): Boolean {
+        return (isStartCode4(bytes, 0) && ((bytes[4] and (0x1f).toByte()) == 7.toByte()))
+                || (isStartCode3(bytes, 0) && ((bytes[3] and (0x1f).toByte()) == 7.toByte()))
+    }
+
+    private fun isPpsNALU(bytes: ByteArray): Boolean {
+        return (isStartCode4(bytes, 0) && ((bytes[4] and (0x1f).toByte()) == 8.toByte()))
+                || (isStartCode3(bytes, 0) && ((bytes[3] and (0x1f).toByte()) == 8.toByte()))
+    }
+
+    private fun isIdrNALU(bytes: ByteArray): Boolean {
+        return (isStartCode4(bytes, 0) && ((bytes[4] and (0x1f).toByte()) == 5.toByte()))
+                || (isStartCode3(bytes, 0) && ((bytes[3] and (0x1f).toByte()) == 5.toByte()))
     }
 
     private fun obtainNALU(rf: RandomAccessFile, maxSize: Int): ByteArray {
@@ -255,7 +270,6 @@ class Task8Activity : AppCompatActivity() {
                 bytes[offset + 1].toInt() == 0 &&
                 bytes[offset + 2].toInt() == 1
     }
-
 
 
     private fun obtainYuvFile() = File(getExternalFilesDir(null), "yuv420_888.yuv")
