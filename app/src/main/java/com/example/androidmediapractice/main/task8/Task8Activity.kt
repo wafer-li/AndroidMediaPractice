@@ -59,7 +59,8 @@ class Task8Activity : AppCompatActivity() {
                 setInteger(
                     MediaFormat.KEY_COLOR_FORMAT,
                     // Our YUV file is stored as YUV420Planar
-                    // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible is for decoder
+                    // MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible will return different
+                    // value which will cause wrong color
                     MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
                 )
                 setInteger(MediaFormat.KEY_BIT_RATE, 1920 * 1080 * 5)
@@ -187,10 +188,13 @@ class Task8Activity : AppCompatActivity() {
                 } else if (outputBufferIndex >= 0) {
                     val image = decoder.getOutputImage(outputBufferIndex)
                         ?: error("outputBufferIndex Error")
+
+                    // 1920 * 1088 -> 1920 * 1080
                     val cropRect = image.cropRect
                     image.planes[0].buffer.limit(cropRect.width() * cropRect.height())
                     image.planes[1].buffer.limit((cropRect.width() * cropRect.height() / 2))
                     image.planes[2].buffer.limit(cropRect.width() * cropRect.height() / 2)
+
                     it.write(ByteBuffer.wrap(obtainImageBytes(1920, 1080, image.planes)))
                     image.close()
                     decoder.releaseOutputBuffer(outputBufferIndex, false)
