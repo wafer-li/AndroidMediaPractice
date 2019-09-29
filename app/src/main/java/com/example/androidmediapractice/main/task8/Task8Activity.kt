@@ -1,6 +1,7 @@
 package com.example.androidmediapractice.main.task8
 
 import android.Manifest
+import android.media.Image
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
@@ -16,6 +17,7 @@ import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.io.RandomAccessFile
+import java.nio.ByteBuffer
 import kotlin.experimental.and
 
 @RuntimePermissions
@@ -26,6 +28,7 @@ class Task8Activity : AppCompatActivity() {
     private var outputFormat = MediaFormat()
 
     private var isEos = false
+    private var frameIndex = 0
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -76,8 +79,6 @@ class Task8Activity : AppCompatActivity() {
         decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         val mediaFormat =
             MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 1920, 1080).apply {
-                setInteger(MediaFormat.KEY_WIDTH, 1920)
-                setInteger(MediaFormat.KEY_HEIGHT, 1080)
                 setInteger(MediaFormat.KEY_FRAME_RATE, 30)
             }
         decoder.configure(mediaFormat, null, null, 0)
@@ -185,11 +186,14 @@ class Task8Activity : AppCompatActivity() {
                     decoder.release()
                     break
                 } else if (outputBufferIndex >= 0) {
-                    val outputBuffer = decoder.getOutputBuffer(outputBufferIndex)?.apply {
-                        position(bufferInfo.offset)
-                        limit(bufferInfo.offset + bufferInfo.size)
-                    }
-                    it.write(outputBuffer)
+                    val image = decoder.getOutputImage(outputBufferIndex)
+                        ?: error("outputBufferIndex Error")
+                    val cropRect = image.cropRect
+                    image.planes[0].buffer.limit(cropRect.width() * cropRect.height())
+                    image.planes[1].buffer.limit((cropRect.width() * cropRect.height() / 2))
+                    image.planes[2].buffer.limit(cropRect.width() * cropRect.height() / 2)
+                    it.write(ByteBuffer.wrap(obtainImageBytes(1920, 1080, image.planes)))
+                    image.close()
                     decoder.releaseOutputBuffer(outputBufferIndex, false)
                 }
             }
@@ -271,10 +275,24 @@ class Task8Activity : AppCompatActivity() {
                 bytes[offset + 2].toInt() == 1
     }
 
+    private fun obtainImageBytes(width: Int, height: Int, planes: Array<Image.Plane>): ByteArray {
+        val bytes = ByteArray(width * height * 3 / 2)
+        var count = 0
+        planes.forEach {
+            val buffer = it.buffer
+            val pixelStride = it.pixelStride
+            for (i in 0 until buffer.remaining() step pixelStride) {
+                bytes[count++] = buffer.get(i)
+            }
+        }
+        return bytes
+    }
 
     private fun obtainYuvFile() = File(getExternalFilesDir(null), "yuv420_888.yuv")
 
     private fun obtainH264File() = File(getExternalFilesDir(null), "output.h264")
 
     private fun obtainOutPutYuvFile() = File(getExternalFilesDir(null), "output.yuv")
+
+
 }
