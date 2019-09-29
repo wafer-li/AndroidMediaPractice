@@ -14,7 +14,7 @@
 
 - [x] 学习 MediaCodec API，完成音频 AAC 硬编、硬解
 
-- [ ] 学习 MediaCodec API，完成视频 H.264 的硬编、硬解
+- [x] 学习 MediaCodec API，完成视频 H.264 的硬编、硬解
 
 - [ ] 串联整个音视频录制流程，完成音视频的采集、编码、封包成 mp4 输出
 
