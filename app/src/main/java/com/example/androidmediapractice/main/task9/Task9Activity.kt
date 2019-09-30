@@ -13,11 +13,18 @@ import java.io.File
 class Task9Activity : AppCompatActivity() {
     private val myRecorder = MyRecorder()
 
-    @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        onRequestPermissionsResult(requestCode, grantResults)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task9)
-        myRecorder.init(obtainMp4File())
+        initMyRecorderWithPermissionCheck()
         captureBtn.setOnClickListener {
             if (myRecorder.isRecording) {
                 myRecorder.stop()
@@ -25,6 +32,11 @@ class Task9Activity : AppCompatActivity() {
                 myRecorder.start()
             }
         }
+    }
+
+    @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    internal fun initMyRecorder() {
+        myRecorder.init(obtainMp4File())
     }
 
     override fun onResume() {
