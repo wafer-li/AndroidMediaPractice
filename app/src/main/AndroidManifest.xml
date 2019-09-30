@@ -49,6 +49,7 @@
     <activity
       android:name=".main.task8.Task8Activity"
       android:launchMode="singleTask" />
+    <activity android:name=".main.task9.Task9Activity" />
   </application>
 
   <dist:module dist:instant="true" />

@@ -42,4 +42,7 @@
   <string name="encode_h264">Encode to H.264</string>
   <string name="decode_h264">Decode H.264</string>
 
+  <!-- Task 9 -->
+  <string name="task9_title">Task 9</string>
+
 </resources>

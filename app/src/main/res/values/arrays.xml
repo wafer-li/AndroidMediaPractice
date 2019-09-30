@@ -25,6 +25,9 @@
     <item>
       学习 MediaCodec API，完成视频 H.264 的硬编、硬解
     </item>
+    <item>
+      串联整个音视频录制流程，完成音视频的采集、编码、封包成 mp4 输出
+    </item>
   </string-array>
 
   <string-array name="task_activities">
@@ -36,5 +39,6 @@
     <item>task6.Task6Activity</item>
     <item>task7.Task7Activity</item>
     <item>task8.Task8Activity</item>
+    <item>task9.Task9Activity</item>
   </string-array>
 </resources>
