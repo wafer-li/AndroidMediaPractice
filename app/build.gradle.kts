@@ -52,12 +52,6 @@ android {
         disable("AllowBackup")
     }
 
-    /**
-     * KEY_STORE_PASS=cs0321cfnmjk
-    KEY_ALIAS=wafer
-    KEY_PASS=cs0321cfnmjk
-     */
-
     signingConfigs {
         create("default") {
             val properties = Properties().apply {
